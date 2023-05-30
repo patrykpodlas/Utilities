@@ -48,7 +48,7 @@ jobs:
                     Write-Output "--- Signing: $($File.Name)"
                     Set-AuthenticodeSignature -Certificate $Certificate -FilePath $File -TimestampServer "http://timestamp.sectigo.com" | Copy-Item -Destination $(Build.StagingDirectory)
                 }
-            } elseif ($Files) {
+            } elseif (!$Files) {
                 Write-Output "--- Nothing to sign."
             }
 
