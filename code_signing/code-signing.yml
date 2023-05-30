@@ -1,0 +1,72 @@
+resources:
+  repositories:
+    - repository: Utilities
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/Utilities
+
+pr: none
+trigger: none
+
+variables:
+  - group: Code Signing
+
+jobs:
+  - job: code_signing
+    pool:
+      name: $(agent-pool)
+    steps:
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: |
+            Write-Output "--- Creating the code signing certificate from Azure Key Vault."
+            New-Item "$(Build.Repository.LocalPath)\code_signing_certificate.pfx" -Value $(code-signing) | Out-Null
+            if (Get-Item -Path "$(Build.Repository.LocalPath)\code_signing_certificate.pfx") {
+                Write-Output "--- Successfully created the code signing certificate."
+            }
+
+            Write-Output "--- Importing the code signing certificate."
+            $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$(Build.Repository.LocalPath)\code_signing_certificate.pfx"
+
+            $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
+                $FileContent = Get-Content $_ -ErrorAction Ignore
+                if ($FileContent | Select-String -Pattern '#sign-me') {
+                    $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
+                    $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
+                    if (-not ($HasBeginBlock -and $HasEndBlock)) {
+                        Write-Output $_
+                    }
+                }
+            }
+            if ($Files) {
+                Write-Output "--- Files to sign:"
+                foreach ($File in $Files) {
+                    Write-Output $File.Name
+                }
+                foreach ($File in $Files) {
+                    Write-Output "--- Signing: $($File.Name)"
+                    Set-AuthenticodeSignature -Certificate $Certificate -FilePath $File -TimestampServer "http://timestamp.sectigo.com" | Copy-Item -Destination "E:\signed_scripts"
+                }
+            } elseif ($Files) {
+                Write-Output "--- Nothing to sign."
+            }
+
+            Write-Output "--- Removing the certificate from the certificate store"
+            Write-Output "--- Looking for certificate with thumbprint: $($Certificate.Thumbprint)"
+            Get-ChildItem -Path Cert:\CurrentUser\My\$Certificate.Thumbprint | Remove-Item
+            Write-Output "--- Certificate removed from store."
+
+            Write-Output "--- Removing the certificate from the local directory."
+            $LocalCertPath = "$(Build.Repository.LocalPath)\code_signing_certificate.pfx"
+            Write-Output "--- Looking for local certificate in: $LocalCertPath"
+            Remove-Item -Path $LocalCertPath
+            Write-Output "--- Certificate removed from local directory."
+
+      - task: AzureFileCopy@5
+        inputs:
+          Destination: 'AzureBlob'
+          AzureSubscription: $(service-connection)
+          SourcePath: $(source-directory)
+          Storage: $(storage-account)
+          ContainerName: $(destination-container)
