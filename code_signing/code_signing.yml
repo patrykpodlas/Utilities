@@ -56,12 +56,12 @@ jobs:
                 Write-Output "--- Certificate removed from store."
 
                 Write-Host "##vso[task.setvariable variable=IsSuccess;isOutput=true]true"
-                Write-Output "After setting Files variable: $(IsSuccess)"
+                Write-Output "After setting Files variable: $($IsSuccess)"
 
             } elseif (!$Files) {
                 Write-Output "--- Nothing to sign."
                 Write-Host "##vso[task.setvariable variable=IsSuccess;isOutput=true]false"
-                Write-Output "After setting Files variable: $(IsSuccess)"
+                Write-Output "After setting Files variable: $($IsSuccess)"
             }
 
       - task: AzureFileCopy@5
