@@ -66,7 +66,7 @@ jobs:
       - task: AzureFileCopy@5
         inputs:
           Destination: 'AzureBlob'
-          azureSubscription: 'Code Signing'
+          azureSubscription: '$(service-connection)'
           SourcePath: $(source-directory)
           storage: $(storage-account)
           ContainerName: $(destination-container)
