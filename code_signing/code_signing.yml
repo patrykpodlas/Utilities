@@ -17,6 +17,7 @@ jobs:
       name: vSphere
     steps:
       - task: PowerShell@2
+        displayName: Signing
         inputs:
           targetType: 'inline'
           script: |
@@ -55,27 +56,29 @@ jobs:
                 Get-ChildItem -Path Cert:\CurrentUser\My\$Certificate.Thumbprint | Remove-Item
                 Write-Output "--- Certificate removed from store."
 
-                Write-Host "##vso[task.setvariable variable=Success;isOutput=true]true"
-                Write-Output "After setting Files variable: $($Success)"
+                Write-Host "##vso[task.setvariable variable=Success]true"
+                Write-Output "After setting Files variable: $(Success)"
 
             } elseif (!$Files) {
                 Write-Output "--- Nothing to sign."
-                Write-Host "##vso[task.setvariable variable=Success;isOutput=true]false"
-                Write-Output "After setting Files variable: $($Success)"
+                Write-Host "##vso[task.setvariable variable=Success]false"
+                Write-Output "After setting Files variable: $(Success)"
             }
 
       - task: AzureFileCopy@5
+        displayName: Copying signed files to Azure Blob
         inputs:
           Destination: 'AzureBlob'
           azureSubscription: 'Code Signing'
           SourcePath: $(source-directory)
           storage: $(storage-account)
           ContainerName: $(destination-container)
-        condition: and(succeeded(), eq(variables['IsSuccess'], 'true'))
+        condition: and(succeeded(), eq(variables['Success'], 'true'))
 
       - task: DeleteFiles@1
+        displayName: Deleting files in staging directory
         inputs:
           SourceFolder: '$(Build.StagingDirectory)'
           Contents: '**'
           Recursive: true
-        condition: and(succeeded(), eq(variables['IsSuccess'], 'true'))
+        condition: and(succeeded(), eq(variables['Success'], 'true'))
