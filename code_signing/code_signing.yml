@@ -46,7 +46,7 @@ jobs:
                 }
                 foreach ($File in $Files) {
                     Write-Output "--- Signing: $($File.Name)"
-                    $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty Destination
+                    $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
                     Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer "http://timestamp.sectigo.com"
                 }
 
