@@ -47,7 +47,7 @@ jobs:
                 foreach ($File in $Files) {
                     Write-Output "--- Signing: $($File.Name)"
                     $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
-                    Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer "http://timestamp.sectigo.com" | Select-Object *
+                    Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer "http://timestamp.sectigo.com" | Select-Object Status, StatusMessage
                 }
 
                 Write-Output "--- Removing the certificate from the certificate store"
