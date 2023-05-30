@@ -55,13 +55,13 @@ jobs:
                 Get-ChildItem -Path Cert:\CurrentUser\My\$Certificate.Thumbprint | Remove-Item
                 Write-Output "--- Certificate removed from store."
 
-                Write-Host "##vso[task.setvariable variable=IsSuccess;isOutput=true]true"
-                Write-Output "After setting Files variable: $($IsSuccess)"
+                Write-Host "##vso[task.setvariable variable=Success;isOutput=true]true"
+                Write-Output "After setting Files variable: $($Success)"
 
             } elseif (!$Files) {
                 Write-Output "--- Nothing to sign."
-                Write-Host "##vso[task.setvariable variable=IsSuccess;isOutput=true]false"
-                Write-Output "After setting Files variable: $($IsSuccess)"
+                Write-Host "##vso[task.setvariable variable=Success;isOutput=true]false"
+                Write-Output "After setting Files variable: $($Success)"
             }
 
       - task: AzureFileCopy@5
