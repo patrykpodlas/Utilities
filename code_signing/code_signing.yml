@@ -55,13 +55,13 @@ jobs:
                 Get-ChildItem -Path Cert:\CurrentUser\My\$Certificate.Thumbprint | Remove-Item
                 Write-Output "--- Certificate removed from store."
 
-                Write-Host "##vso[task.setvariable variable=Success;isOutput=true]true"
-                Write-Output "After setting Files variable: $(Success)"
+                Write-Host "##vso[task.setvariable variable=IsSuccess;isOutput=true]true"
+                Write-Output "After setting Files variable: $(IsSuccess)"
 
             } elseif (!$Files) {
                 Write-Output "--- Nothing to sign."
-                Write-Host "##vso[task.setvariable variable=Success;isOutput=true]false"
-                Write-Output "After setting Files variable: $(Success)"
+                Write-Host "##vso[task.setvariable variable=IsSuccess;isOutput=true]false"
+                Write-Output "After setting Files variable: $(IsSuccess)"
             }
 
       - task: AzureFileCopy@5
@@ -71,11 +71,11 @@ jobs:
           SourcePath: $(source-directory)
           storage: $(storage-account)
           ContainerName: $(destination-container)
-        condition: and(succeeded(), eq(variables['Success'], 'true'))
+        condition: and(succeeded(), eq(variables['IsSuccess'], 'true'))
 
       - task: DeleteFiles@1
         inputs:
           SourceFolder: '$(Build.StagingDirectory)'
           Contents: '**'
           Recursive: true
-        condition: and(succeeded(), eq(variables['Success'], 'true'))
+        condition: and(succeeded(), eq(variables['IsSuccess'], 'true'))
