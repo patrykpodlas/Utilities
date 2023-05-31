@@ -33,7 +33,7 @@ jobs:
             }
             if ($Files) {
                 Write-Output "--- Creating the code signing certificate from Azure Key Vault."
-                New-Item "$(Build.StagingDirectory)\code_signing_certificate.pfx" -Value $(code-signing) | Out-Null
+                New-Item "$(Build.StagingDirectory)\code_signing_certificate.pfx" -Value $(code-signing-certificate) | Out-Null
                 if (Get-Item -Path "$(Build.StagingDirectory)\code_signing_certificate.pfx") {
                     Write-Output "--- Successfully created the code signing certificate."
                 }
