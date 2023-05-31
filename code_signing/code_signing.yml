@@ -67,8 +67,8 @@ jobs:
         displayName: Copying signed files to Azure Blob
         inputs:
           Destination: 'AzureBlob'
-          azureSubscription: 'Code Signing'
-          SourcePath: $(source-directory)
+          azureSubscription: 'Code-Signing'
+          SourcePath: $(Build.StagingDirectory)
           storage: $(storage-account)
           ContainerName: $(destination-container)
         condition: and(succeeded(), eq(variables['Success'], 'true'))
