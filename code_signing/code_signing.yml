@@ -17,6 +17,13 @@ jobs:
       name: vSphere
     steps:
       - task: PowerShell@2
+        displayName: Retrieve a list of already signed files
+        inputs:
+          targetType: 'inline'
+          script: |
+            $ExistingFiles = Get-AzStorageBlob -Container $(estination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name
+            Write-Output "List of existing signed files: $($ExistingFiles)."
+      - task: PowerShell@2
         displayName: Signing
         inputs:
           targetType: 'inline'
