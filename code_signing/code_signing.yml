@@ -22,8 +22,8 @@ jobs:
           scriptType: 'ps'
           scriptLocation: 'inlineScript'
           workingDirectory: '$(Build.StagingDirectory)'
+          useGlobalConfig: true
           inlineScript: |
-            Connect-AzAccount
             Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name
       - task: PowerShell@2
         displayName: Signing
