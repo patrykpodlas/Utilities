@@ -33,17 +33,14 @@ jobs:
             Write-Output "--- Searching for existing signed files."
             $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object @{Name="Name";Expression={$_.Name.Split('/')[-1]}}
             Write-Output "Existing files:"
-            $ExistingFiles = $ExistingFiles | Select-Object -ExpandProperty Name
-            foreach ($ExistingFile in $ExistingFiles) {
-                Write-Output $ExistingFile
-            }
+            Write-Output "$ExistingFiles"
             Write-Host "##vso[task.setvariable variable=ExistingFiles;]$ExistingFiles"
       - task: PowerShell@2
         displayName: Signing
         inputs:
           targetType: 'inline'
           script: |
-            Write-Output $(ExistingFiles)
+            $ExistingFiles = $(ExistingFiles)
             Write-Output "--- Retrieving a list of files to be signed."
             $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
@@ -56,7 +53,9 @@ jobs:
                 }
             }
 
-            if ($Files) {
+            $FilteredFiles = $Files | Where-Object {$ExistingFiles.Name -notcontains $_.Name}
+
+            if ($FilteredFiles) {
                 Write-Output "--- Creating the code signing certificate from Azure Key Vault."
                 New-Item "$(Build.StagingDirectory)\code_signing_certificate.pfx" -Value $(code-signing-certificate) | Out-Null
                 if (Get-Item -Path "$(Build.StagingDirectory)\code_signing_certificate.pfx") {
@@ -67,10 +66,10 @@ jobs:
                 $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$(Build.StagingDirectory)\code_signing_certificate.pfx"
 
                 Write-Output "--- Files to sign:"
-                foreach ($File in $Files) {
+                foreach ($File in $FilteredFiles) {
                     Write-Output $File.Name
                 }
-                foreach ($File in $Files) {
+                foreach ($File in $FilteredFiles) {
                     Write-Output "--- Copying: $($File.Name) to $(Build.StagingDirectory) and signing."
                     $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
                     Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer "http://timestamp.sectigo.com" | Select-Object Status, StatusMessage
@@ -87,8 +86,10 @@ jobs:
 
                 Write-Host "##vso[task.setvariable variable=Success]true"
 
-            } elseif (!$Files) {
-                Write-Output "--- Nothing to sign."
+            } elseif (!$FilteredFiles) {
+                Write-Output "--- Nothing to sign, or the files already exist in the storage account."
+                Write-Output "--- List of filtered files found in the storage account:"
+                Write-Output "$FilteredFiles"
                 Write-Host "##vso[task.setvariable variable=Success]false"
             }
 
