@@ -16,6 +16,10 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Terraform
+    - repository: Packer
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/Packer
 
 pr: none
 
