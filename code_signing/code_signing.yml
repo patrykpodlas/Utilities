@@ -52,11 +52,11 @@ jobs:
                     $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
                     $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
                     if (-not ($HasBeginBlock -and $HasEndBlock)) {
-                        $FileName = $_.Name
+                        $FileName = $_
                         $ExistingFiles = $(ExistingFiles)
-                        $IsExisting = $ExistingFiles.Split(' ') -contains $FileName
+                        $IsExisting = [string]$ExistingFiles.Split(' ') -contains $FileName
                         if (-not $IsExisting) {
-                            Write-Output [string]$_
+                            Write-Output $_
                         }
                     }
                 }
