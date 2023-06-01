@@ -25,10 +25,12 @@ jobs:
           workingDirectory: '$(Build.StagingDirectory)'
           addSpnToEnvironment: true
           inlineScript: |
+            Write-Output "--- Logging into storage account: $(storage-account), to retrieve a list of already signed files."
             $SecurePassword = ConvertTo-SecureString -String $(service-principal-secret) -AsPlainText -Force
             $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
-
             Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
+            Write-Output "--- Logged into Azure."
+            Write-Output "--- Searching for existing signed files."
             $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name
             Write-Host "##vso[task.setvariable variable=ExistingFiles]$ExistingFiles"
       - task: PowerShell@2
@@ -36,6 +38,7 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
+            Write-Output "Retrieving a list of files to be signed."
             $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
                 if ($FileContent | Select-String -Pattern '#sign-me') {
@@ -44,10 +47,7 @@ jobs:
                     if (-not ($HasBeginBlock -and $HasEndBlock)) {
                         $FileName = $_.Name
                         if ($ExistingFiles -notcontains $FileName) {
-                            $FileName = $_.Name
-                            if (c$ExistingFiles -notcontains $FileName) {
-                                Write-Output $_
-                            }
+                            Write-Output $_
                         }
                     }
                 }
