@@ -47,7 +47,7 @@ jobs:
                     $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
                     if (-not ($HasBeginBlock -and $HasEndBlock)) {
                         $FileName = $_.Name
-                        if ($(ExistingFiles) -notcontains $FileName) {
+                        if ("$(ExistingFiles)" -notcontains $FileName) {
                             Write-Output $_
                         }
                     }
