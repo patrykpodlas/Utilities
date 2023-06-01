@@ -19,6 +19,8 @@ jobs:
     pool:
       name: vSphere
     steps:
+      - checkout: self
+      - checkout: Azure
       - task: AzureCLI@2
         displayName: Retrieve a list of existing signed files
         inputs:
