@@ -57,7 +57,7 @@ jobs:
                 Write-Output "--- Certificate removed from store."
 
                 Write-Output "--- Removing the certificate from the staging directory."
-                Get-ChildItem -Path $(Build.StagingDirectory) | Remove-Item
+                Get-ChildItem -Path $(Build.StagingDirectory)\code_signing_certificate.pfx | Remove-Item
                 Write-Output "--- Certificate removed from the staging directory."
 
                 Write-Host "##vso[task.setvariable variable=Success]true"
@@ -72,7 +72,7 @@ jobs:
         inputs:
           Destination: 'AzureBlob'
           azureSubscription: 'Code-Signing'
-          SourcePath: $(Build.StagingDirectory)
+          SourcePath: $(Build.StagingDirectory)\*
           storage: $(storage-account)
           ContainerName: $(destination-container)
         condition: and(succeeded(), eq(variables['Success'], 'true'))
