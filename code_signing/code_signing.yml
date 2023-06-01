@@ -38,7 +38,7 @@ jobs:
             }
 
             $ExistingFilesJson = $ExistingFiles | ConvertTo-Json
-            Write-Host "##vso[task.setvariable variable=ExistingFiles;]$ExistingFilesJson"
+            Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"
 
       - task: PowerShell@2
         displayName: Signing
