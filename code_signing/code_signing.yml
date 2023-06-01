@@ -47,7 +47,7 @@ jobs:
           script: |
             Write-Output "--- Retrieving a list of files to be signed."
 
-            $ExistingFiles = "$(ExistingFilesJson)" | ConvertFrom-Json
+            $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
 
             $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
@@ -96,7 +96,7 @@ jobs:
             } elseif (!$FilteredFiles) {
                 Write-Output "--- Nothing to sign, or the files already exist in the storage account."
                 Write-Output "--- List of filtered files found in the storage account:"
-                Write-Output "$FilteredFiles"
+                Write-Output $Files | Where-Object {$ExistingFiles.Name -contains $_.Name}
                 Write-Host "##vso[task.setvariable variable=Success]false"
             }
 
