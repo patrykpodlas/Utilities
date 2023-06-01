@@ -32,7 +32,7 @@ jobs:
             Write-Output "--- Logged into Azure."
             Write-Output "--- Searching for existing signed files."
             $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object @{Name="Name";Expression={$_.Name.Split('/')[-1]}}
-            Write-Output "Existing files: $($ExistingFiles.Name)"
+            Write-Output "Existing files:"
             foreach ($ExistingFile in $($ExistingFiles.Name)) {
                 Write-Output $ExistingFile
             }
@@ -50,7 +50,8 @@ jobs:
                     $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
                     if (-not ($HasBeginBlock -and $HasEndBlock)) {
                         $FileName = $_.Name
-                        if (-not ($ExistingFiles.Name -contains $FileName)) {
+                        $IsExisting = $ExistingFiles.Name -contains $FileName
+                        if (-not $IsExisting) {
                             Write-Output $_
                         }
                     }
