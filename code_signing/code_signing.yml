@@ -72,9 +72,10 @@ jobs:
         inputs:
           Destination: 'AzureBlob'
           azureSubscription: 'Code-Signing'
-          SourcePath: $(Build.StagingDirectory)/*
+          SourcePath: $(Build.StagingDirectory)
           storage: $(storage-account)
           ContainerName: $(destination-container)
+          BlobPrefix: powershell
         condition: and(succeeded(), eq(variables['Success'], 'true'))
 
       - task: DeleteFiles@1
