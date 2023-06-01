@@ -72,7 +72,7 @@ jobs:
         inputs:
           Destination: 'AzureBlob'
           azureSubscription: 'Code-Signing'
-          SourcePath: $(Build.StagingDirectory)/*
+          SourcePath: $(Build.StagingDirectory)\*
           storage: $(storage-account)
           ContainerName: $(destination-container)
         condition: and(succeeded(), eq(variables['Success'], 'true'))
