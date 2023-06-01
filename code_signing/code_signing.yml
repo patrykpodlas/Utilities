@@ -56,7 +56,7 @@ jobs:
                         $ExistingFiles = $(ExistingFiles)
                         $IsExisting = $ExistingFiles.Split(' ') -contains $FileName
                         if (-not $IsExisting) {
-                            $_
+                            Write-Output [string]$_
                         }
                     }
                 }
