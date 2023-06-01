@@ -16,13 +16,14 @@ jobs:
     pool:
       name: vSphere
     steps:
-      - task: PowerShell@2
-        displayName: Retrieve a list of already signed files
+      - task: AzureCLI@2
         inputs:
-          targetType: 'inline'
-          script: |
-            $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name
-            Write-Output "List of existing signed files: $($ExistingFiles)."
+          zureSubscription: 'Code-Signing'
+          scriptType: 'ps'
+          scriptLocation: 'inlineScript'
+          inlineScript: '$ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name'
+          addSpnToEnvironment: true
+          workingDirectory: '$(Build.StagingDirectory)'
       - task: PowerShell@2
         displayName: Signing
         inputs:
