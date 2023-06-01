@@ -18,7 +18,7 @@ jobs:
     steps:
       - task: AzureCLI@2
         inputs:
-          zureSubscription: 'Code-Signing'
+          azureSubscription: 'Code-Signing'
           scriptType: 'ps'
           scriptLocation: 'inlineScript'
           inlineScript: '$ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name'
