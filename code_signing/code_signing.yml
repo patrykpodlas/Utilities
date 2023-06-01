@@ -8,6 +8,10 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Azure
+      - repository: VMware
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/VMware
 
 pr: none
 
@@ -56,7 +60,8 @@ jobs:
 
             $AzureFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Azure" -Include '*.ps1' -Recurse
             $UtilitiesFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Utilities" -Include '*.ps1' -Recurse
-            $Files = $AzureFiles + $UtilitiesFiles
+            $VMwareFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/VMware" -Include '*.ps1' -Recurse
+            $Files = $AzureFiles + $UtilitiesFiles + $VMwareFiles
 
             $Files = $Files | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
