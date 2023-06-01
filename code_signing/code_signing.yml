@@ -38,6 +38,7 @@ jobs:
                 Write-Output $ExistingFile
             }
             Write-Host "##vso[task.setvariable variable=ExistingFiles;]$ExistingFiles"
+            $ExistingFiles | Get-Member
       - task: PowerShell@2
         displayName: Signing
         inputs:
@@ -54,7 +55,7 @@ jobs:
                         $FileName = $_.Name
                         $IsExisting = $(ExistingFiles) -contains $FileName
                         if (-not $IsExisting) {
-                            Write-Output $_
+                            $_
                         }
                     }
                 }
