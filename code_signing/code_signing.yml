@@ -37,7 +37,7 @@ jobs:
                 Write-Output $File.Name
             }
 
-            $ExistingFilesJson = $ExistingFiles | ConvertTo-Json
+            $ExistingFilesJson = $ExistingFiles | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"
 
       - task: PowerShell@2
