@@ -46,7 +46,7 @@ jobs:
                     Write-Output $File.Name
                 }
                 foreach ($File in $Files) {
-                    Write-Output "--- Signing: $($File.Name)"
+                    Write-Output "--- Copying: $($File.Name) to $(Build.StagingDirectory) and signing."
                     $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
                     Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer "http://timestamp.sectigo.com" | Select-Object Status, StatusMessage
                 }
@@ -72,10 +72,9 @@ jobs:
         inputs:
           Destination: 'AzureBlob'
           azureSubscription: 'Code-Signing'
-          SourcePath: $(Build.StagingDirectory)
+          SourcePath: $(Build.StagingDirectory)/*
           storage: $(storage-account)
           ContainerName: $(destination-container)
-          BlobPrefix: powershell
         condition: and(succeeded(), eq(variables['Success'], 'true'))
 
       - task: DeleteFiles@1
