@@ -53,11 +53,11 @@ jobs:
 
                 Write-Output "--- Removing the certificate from the certificate store."
                 Write-Output "--- Looking for certificate with thumbprint: $($Certificate.Thumbprint)."
-                Get-ChildItem -Path Cert:\CurrentUser\My\$Certificate.Thumbprint | Remove-Item
+                Get-Item -Path Cert:\CurrentUser\My\$Certificate.Thumbprint | Remove-Item
                 Write-Output "--- Certificate removed from store."
 
                 Write-Output "--- Removing the certificate from the staging directory."
-                Get-ChildItem -Path $(Build.StagingDirectory)\code_signing_certificate.pfx | Remove-Item
+                Get-Item -Path $(Build.StagingDirectory)\code_signing_certificate.pfx | Remove-Item
                 Write-Output "--- Certificate removed from the staging directory."
 
                 Write-Host "##vso[task.setvariable variable=Success]true"
