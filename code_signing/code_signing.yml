@@ -106,8 +106,6 @@ jobs:
 
             } elseif (!$FilteredFiles) {
                 Write-Output "--- Nothing to sign, or the files already exist in the storage account."
-                Write-Output "--- List of filtered files found in the storage account:"
-                Write-Output $Files | Where-Object {$ExistingFiles.Name -contains $_.Name}
                 Write-Host "##vso[task.setvariable variable=Success]false"
             }
 
