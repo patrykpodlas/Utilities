@@ -47,7 +47,7 @@ jobs:
           script: |
             Write-Output "--- Retrieving a list of files to be signed."
 
-            $ExistingFiles = $(ExistingFilesJson) | ConvertFrom-Json
+            $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
 
             $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
