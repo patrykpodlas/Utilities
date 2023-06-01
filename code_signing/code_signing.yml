@@ -51,10 +51,14 @@ jobs:
                     Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer "http://timestamp.sectigo.com" | Select-Object Status, StatusMessage
                 }
 
-                Write-Output "--- Removing the certificate from the certificate store"
-                Write-Output "--- Looking for certificate with thumbprint: $($Certificate.Thumbprint)"
+                Write-Output "--- Removing the certificate from the certificate store."
+                Write-Output "--- Looking for certificate with thumbprint: $($Certificate.Thumbprint)."
                 Get-ChildItem -Path Cert:\CurrentUser\My\$Certificate.Thumbprint | Remove-Item
                 Write-Output "--- Certificate removed from store."
+
+                Write-Output "--- Removing the certificate from the staging directory."
+                Get-ChildItem -Path $(Build.StagingDirectory) | Remove-Item
+                Write-Output "--- Certificate removed from the staging directory."
 
                 Write-Host "##vso[task.setvariable variable=Success]true"
 
