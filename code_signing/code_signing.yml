@@ -36,7 +36,7 @@ jobs:
             foreach ($ExistingFile in $($ExistingFiles.Name)) {
                 Write-Output $ExistingFile
             }
-            Write-Host "##vso[task.setvariable variable=ExistingFiles]$($ExistingFiles.Name)"
+            Write-Host "##vso[task.setvariable variable=ExistingFiles;]$($ExistingFiles.Name)"
       - task: PowerShell@2
         displayName: Signing
         inputs:
