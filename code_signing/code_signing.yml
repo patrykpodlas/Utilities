@@ -77,9 +77,9 @@ jobs:
                     Write-Output $File.Name
                 }
                 foreach ($File in $FilteredFiles) {
-                    Write-Output "--- Copying: $($File.Name) to $(Build.StagingDirectory) and signing."
-                    $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
-                    Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer "http://timestamp.sectigo.com" | Select-Object -ExpandProperty StatusMessage
+                    Write-Output "--- Copying: $($File.Name) to $(Build.StagingDirectory) and signing." `
+                    $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName `
+                    "(Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer "http://timestamp.sectigo.com" | Select-Object -ExpandProperty StatusMessage)"
                 }
 
                 Write-Output "--- Removing the certificate from the certificate store."
