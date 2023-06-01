@@ -20,9 +20,9 @@ jobs:
       name: vSphere
     steps:
       - checkout: self
-        path: scripts
+        path: $(Build.Repository.LocalPath)/scripts
       - checkout: Azure
-        path: scripts
+        path: $(Build.Repository.LocalPath)/scripts
       - task: AzureCLI@2
         displayName: Retrieve a list of existing signed files
         inputs:
