@@ -38,7 +38,7 @@ jobs:
             }
 
             $ExistingFilesJson = ($ExistingFiles | ConvertTo-Json -Compress)
-            Write-Host "##vso[task.setvariable variable=ExistingFiles;]$ExistingFilesJson"
+            Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"
 
       - task: PowerShell@2
         displayName: Signing
@@ -46,6 +46,9 @@ jobs:
           targetType: 'inline'
           script: |
             Write-Output "--- Retrieving a list of files to be signed."
+
+            $ExistingFiles = $(ExistingFilesJson) | ConvertFrom-Json
+
             $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
                 if ($FileContent | Select-String -Pattern '#sign-me') {
@@ -57,7 +60,6 @@ jobs:
                 }
             }
 
-            $ExistingFiles = ($(ExistingFiles) | ConvertFrom-Json)
             $FilteredFiles = $Files | Where-Object {$ExistingFiles.Name -notcontains $_.Name}
 
             if ($FilteredFiles) {
