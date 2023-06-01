@@ -21,7 +21,7 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
-            $ExistingFiles = Get-AzStorageBlob -Container $(estination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name
+            $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name
             Write-Output "List of existing signed files: $($ExistingFiles)."
       - task: PowerShell@2
         displayName: Signing
