@@ -42,6 +42,7 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
+            Write-Output $ExistingFiles
             Write-Output "Retrieving a list of files to be signed."
             $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
