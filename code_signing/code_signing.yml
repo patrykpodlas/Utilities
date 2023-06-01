@@ -8,7 +8,7 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Azure
-      - repository: VMware
+    - repository: VMware
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/VMware
