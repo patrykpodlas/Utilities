@@ -31,7 +31,7 @@ jobs:
             Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
             Write-Output "--- Logged into Azure."
             Write-Output "--- Searching for existing signed files."
-            $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context -Prefix powershell | Select-Object -ExpandProperty Name
+            $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context -Prefix "powershell/" | Select-Object -ExpandProperty Name
             Write-Output "Existing files: $($ExistingFiles)"
             Write-Host "##vso[task.setvariable variable=ExistingFiles]$ExistingFiles"
       - task: PowerShell@2
