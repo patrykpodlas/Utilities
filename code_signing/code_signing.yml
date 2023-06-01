@@ -22,7 +22,6 @@ jobs:
           scriptType: 'ps'
           scriptLocation: 'inlineScript'
           inlineScript: '$ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name'
-          addSpnToEnvironment: true
           workingDirectory: '$(Build.StagingDirectory)'
       - task: PowerShell@2
         displayName: Signing
