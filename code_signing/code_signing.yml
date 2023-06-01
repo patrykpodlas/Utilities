@@ -6,6 +6,7 @@ resources:
       name: patrykpodlas/Utilities
     - repository: Azure
       type: github
+      endpoint: patrykpodlas
       name: patrykpodlas/Azure
 
 pr: none
