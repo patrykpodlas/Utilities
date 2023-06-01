@@ -12,6 +12,10 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/VMware
+    - repository: Terraform
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/Terraform
 
 pr: none
 
@@ -26,6 +30,7 @@ jobs:
       - checkout: self
       - checkout: Azure
       - checkout: VMware
+      - checkout: Terraform
       - task: AzureCLI@2
         displayName: Retrieve a list of existing signed files
         inputs:
@@ -62,7 +67,8 @@ jobs:
             $AzureFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Azure" -Include '*.ps1' -Recurse
             $UtilitiesFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Utilities" -Include '*.ps1' -Recurse
             $VMwareFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/VMware" -Include '*.ps1' -Recurse
-            $Files = $AzureFiles + $UtilitiesFiles + $VMwareFiles
+            $TerraformFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Terraform" -Include '*.ps1' -Recurse
+            $Files = $AzureFiles + $UtilitiesFiles + $VMwareFiles + $TerraformFiles
 
             $Files = $Files | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
