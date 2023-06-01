@@ -32,14 +32,20 @@ jobs:
             Write-Output "--- Logged into Azure."
             Write-Output "--- Searching for existing signed files."
             $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object @{Name="Name";Expression={$_.Name.Split('/')[-1]}}
-            Write-Output "--- Existing files: $ExistingFiles"
-            Write-Host "##vso[task.setvariable variable=ExistingFiles;]$ExistingFiles"
+            Write-Output "--- Existing files:"
+            Foreach ($File in $ExistingFiles) {
+                Write-Output $File.Name
+            }
+
+            $ExistingFilesJson = $ExistingFiles | ConvertTo-Json
+            Write-Host "##vso[task.setvariable variable=ExistingFiles;]$ExistingFilesJson"
+
       - task: PowerShell@2
         displayName: Signing
         inputs:
           targetType: 'inline'
           script: |
-            $ExistingFiles = $(ExistingFiles)
+            $ExistingFiles = $(ExistingFilesJson) | ConvertFrom-Json
             Write-Output "--- Retrieving a list of files to be signed."
             $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
