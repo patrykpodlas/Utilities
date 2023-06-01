@@ -38,7 +38,6 @@ jobs:
                 Write-Output $ExistingFile
             }
             Write-Host "##vso[task.setvariable variable=ExistingFiles;]$ExistingFiles"
-            $ExistingFiles | Get-Member
       - task: PowerShell@2
         displayName: Signing
         inputs:
@@ -52,12 +51,7 @@ jobs:
                     $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
                     $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
                     if (-not ($HasBeginBlock -and $HasEndBlock)) {
-                        $FileName = $_
-                        $ExistingFiles = $(ExistingFiles)
-                        $IsExisting = [string]$ExistingFiles.Split(' ') -contains $FileName
-                        if (-not $IsExisting) {
                             Write-Output $_
-                        }
                     }
                 }
             }
