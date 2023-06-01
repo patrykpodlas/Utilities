@@ -53,7 +53,7 @@ jobs:
                     $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
                     if (-not ($HasBeginBlock -and $HasEndBlock)) {
                         $FileName = $_.Name
-                        $IsExisting = $(ExistingFiles -split ' ') -contains $FileName
+                        $IsExisting = $(ExistingFiles).Split(' ') -contains $FileName
                         if (-not $IsExisting) {
                             $_
                         }
