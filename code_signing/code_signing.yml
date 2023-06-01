@@ -25,15 +25,15 @@ jobs:
           workingDirectory: '$(Build.StagingDirectory)'
           addSpnToEnvironment: true
           inlineScript: |
-            $clientId = $(servicePrincipalId)
-            $tenantId = $(tenantId)
+            $clientId = $env:servicePrincipalID
+            $tenantId = $env:tenantId
             $clientsecret = $(service-principal-secret)
             $securePassword = ConvertTo-SecureString -String $clientSecret -AsPlainText -Force
             $psCredential = New-Object System.Management.Automation.PSCredential($clientId, $securePassword)
 
             Connect-AzAccount -ServicePrincipal -Credential $pscredential -Tenant $tenantId
             Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -ExpandProperty Name
-            
+
       - task: PowerShell@2
         displayName: Signing
         inputs:
