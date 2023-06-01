@@ -81,6 +81,8 @@ jobs:
                     $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
                     Write-Output "$($File.Name): $(Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage)"
                 }
+                
+                Write-Output "--- Finished signing all the files."
 
                 Write-Output "--- Removing the certificate from the certificate store."
                 Write-Output "--- Looking for certificate with thumbprint: $($Certificate.Thumbprint)."
