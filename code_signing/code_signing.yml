@@ -20,9 +20,7 @@ jobs:
       name: vSphere
     steps:
       - checkout: self
-        path: $(Build.Repository.LocalPath)/scripts
       - checkout: Azure
-        path: $(Build.Repository.LocalPath)/scripts
       - task: AzureCLI@2
         displayName: Retrieve a list of existing signed files
         inputs:
@@ -56,7 +54,12 @@ jobs:
 
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
 
-            $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
+            
+            $AzureFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Azure" -Include '*.ps1' -Recurse
+            $UtilitiesFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Utilities" -Include '*.ps1' -Recurse
+            $Files = $AzureFiles + $UtilitiesFiles
+
+            $Files | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
                 if ($FileContent | Select-String -Pattern '#sign-me') {
                     $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
