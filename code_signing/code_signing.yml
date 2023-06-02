@@ -7,14 +7,15 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Utilities
+      ref: main
+      trigger:
+      branches:
+        include:
+        - main
     - repository: Azure
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Azure
-      trigger:
-        branches:
-          include:
-          - main
     - repository: VMware
       type: github
       endpoint: patrykpodlas
