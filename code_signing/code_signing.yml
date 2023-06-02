@@ -54,6 +54,7 @@ jobs:
             Write-Output "--- Logged into Azure."
             Write-Output "--- Searching for existing signed files."
             $Context = $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context
+            # Getting list of files in the blob, the object will also contain the existing SHA256 metadata.
             $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $Context |
             Select-Object -Property @{Name = "Name"; Expression = { $_.Name.Split('/')[-1] } },
                                     @{Name = "SHA256"; Expression = { $_.BlobClient.GetProperties().Value.Metadata.SHA256 } }
@@ -69,27 +70,28 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
-            $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
-            $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)/s" -Directory | Select-Object -ExpandProperty Name
-            Write-Output "--- Retrieving a list of files to be signed."
-            $Files = @()
-            foreach($Directory in $Directories){
-                Write-Output "--- Getting a list of files from $Directory repository to scan."
-                $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
-            }
+          $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
+          $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)/s" -Directory | Select-Object -ExpandProperty Name
+          Write-Output "--- Retrieving a list of files to be signed."
+          $Files = @()
+          foreach($Directory in $Directories){
+              Write-Output "--- Getting a list of files from $Directory repository to scan."
+              $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
+          }
 
-            $Files = $Files | ForEach-Object {
-                $FileContent = Get-Content $_ -ErrorAction Ignore
-                if ($FileContent | Select-String -Pattern '#sign-me') {
-                    $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
-                    $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
-                    if (-not ($HasBeginBlock -and $HasEndBlock)) {
-                            Write-Output $_
-                    }
-                }
-            }
+          $Files = $Files | ForEach-Object {
+              $FileContent = Get-Content $_ -ErrorAction Ignore
+              if ($FileContent | Select-String -Pattern '#sign-me') {
+                  $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
+                  $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
+                  if (-not ($HasBeginBlock -and $HasEndBlock)) {
+                      $Hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
+                      $_ | Add-Member -NotePropertyName "SHA256" -NotePropertyValue $Hash -PassThru
+                  }
+              }
+          }
 
-            $FilteredFiles = $Files | Where-Object {$ExistingFiles.Name -notcontains $_.Name}
+          $FilteredFiles = $Files | Where-Object {$ExistingFiles.Name -notcontains $_.Name}
 
             if ($FilteredFiles) {
                 Write-Output "--- Creating the code signing certificate from Azure Key Vault."
