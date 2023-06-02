@@ -54,12 +54,9 @@ jobs:
             Write-Output "--- Logged into Azure."
             Write-Output "--- Searching for existing signed files."
             $Context = $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context
-            $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $Context | Select-Object -Property @{Name = "Name"; Expression = { $_.Name.Split('/')[-1] } }, @{Name = "SHA256"; Expression = { $_.BlobClient.GetProperties().Value.Metadata.SHA256 } }
-
-            # Test
-            $Blob = Get-AzStorageBlob -Container $(destination-container) -Blob 'powershell/sign-me.ps1' -Context $Context
-            $Properties = $Blob.BlobClient.GetProperties()
-            Write-Output $Properties.Value.Metadata.SHA256
+            $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $Context |
+            Select-Object -Property @{Name = "Name"; Expression = { $_.Name.Split('/')[-1] } },
+                                    @{Name = "SHA256"; Expression = { $_.BlobClient.GetProperties().Value.Metadata.SHA256 } }
 
             Write-Output "--- Existing files in the storage account:"
             Write-Output $ExistingFiles
