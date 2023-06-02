@@ -85,7 +85,8 @@ jobs:
                     $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
                     $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
                     if (-not ($HasBeginBlock -and $HasEndBlock)) {
-                            Write-Output $_
+                        $Hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
+                        $_ | Add-Member -NotePropertyName "SHA256" -NotePropertyValue $Hash -PassThru
                     }
                 }
             }
