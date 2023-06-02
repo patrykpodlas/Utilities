@@ -165,14 +165,14 @@ jobs:
           workingDirectory: '$(Build.StagingDirectory)'
           addSpnToEnvironment: true
           inlineScript: |
-            Write-Output "--- Logging into storage account, to retrieve a list of already signed files."
+            Write-Output "--- Logging into storage account."
             $SecurePassword = ConvertTo-SecureString -String $(service-principal-secret) -AsPlainText -Force
             $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
             Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
             Write-Output "--- Logged into Azure."
 
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
-            Write-Output "ExistingFilesJson: $(ExistingFilesJson)"
+            Write-Output $(ExistingFiles)
             $DestinationContainer = "$(destination-container)"
             $BlobPrefix = "powershell"
             $Context = $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context
