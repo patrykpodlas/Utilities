@@ -171,8 +171,8 @@ jobs:
             Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
             Write-Output "--- Logged into Azure."
 
-            $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
-            Write-Output '$(ExistingFilesJson)'
+            $ExistingFiles = "$(ExistingFilesJson)" | ConvertFrom-Json
+            Write-Output "$(ExistingFilesJson)"
             $DestinationContainer = "$(destination-container)"
             $BlobPrefix = "powershell"
             $Context = $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context
