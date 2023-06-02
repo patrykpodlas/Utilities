@@ -72,13 +72,13 @@ jobs:
           script: |
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
             $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)/s" -Directory | Select-Object -ExpandProperty Name
-            Write-Output "--- Retrieving a list of files to be signed."
             $Files = @()
             foreach($Directory in $Directories){
-                Write-Output "--- Getting a list of files from $Directory repository to scan."
+                Write-Output "--- Scanning $Directory repository for files."
                 $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
             }
 
+            Write-Output "--- Applying checks to see if the files need to be signed."
             $Files = $Files | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
                 # Check if the file has the #sign-me tag
@@ -95,7 +95,7 @@ jobs:
                             $FileName = $_.Name
                             $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
                             if ($ExistingFile.SHA256 -ne $_.SHA256) {
-                                Write-Host "File: $ExistingFile in storage account has a different hash than $FileName to be uploaded."
+                                Write-Host "File: $($ExistingFile.Name) in storage account has a different hash than $FileName to be uploaded."
                                 $_
                             } else {Write-Host "File: $FileName already exists with the same hash in the storage account."}
                         }
@@ -115,10 +115,10 @@ jobs:
                     Write-Output "--- Successfully created the code signing certificate."
                 }
 
-                Write-Output "--- Importing the code signing certificate."
+                Write-Output "--- Importing the code signing certificate to certificate store."
                 $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$(Build.StagingDirectory)\code_signing_certificate.pfx"
 
-                Write-Output "--- Files to sign:"
+                Write-Output "--- Files to be signed:"
                 foreach ($File in $FilteredFiles) {
                     Write-Output $File.Name
                 }
@@ -168,7 +168,7 @@ jobs:
                 $Metadata = @{
                     SHA256 = $File.SHA256
                 }
-                Write-Output "--- Setting metadata for blob '$($File.Name)' with hash: $($File.SHA256)."
+                Write-Output "--- Uploading file: $($File.Name) and setting metadata with hash: $($File.SHA256)."
                 Get-AzStorageBlob -Container $(destination-container) -Blob "powershell/$($File.Name)" -Context $Context | Set-AzStorageBlobContent -File $File.Name -Metadata $Metadata -Force | Out-Null
                 Write-Output "--- Blob uploaded."
             }
