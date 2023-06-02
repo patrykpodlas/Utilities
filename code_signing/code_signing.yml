@@ -60,7 +60,7 @@ jobs:
                                     @{Name = "SHA256"; Expression = { $_.BlobClient.GetProperties().Value.Metadata.SHA256 } }
 
             Write-Output "--- Existing files in the storage account:"
-            Write-Output $ExistingFiles
+            $ExistingFiles | Format-Table Name, SHA256
 
             $ExistingFilesJson = ($ExistingFiles | ConvertTo-Json -Compress)
             Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"
@@ -147,7 +147,8 @@ jobs:
             }
 
       - task: AzureCLI@2
-        displayName: Update the blobs with the SHA256 hashes
+        displayName: Upload the files to blob storage along with the SHA256 metadata
+        condition: and(succeeded(), eq(variables['Success'], 'true'))
         inputs:
           azureSubscription: 'Code-Signing'
           scriptType: 'ps'
