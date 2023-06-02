@@ -1,3 +1,4 @@
+# Include all of the repositories which you want this pipeline to scan for files to sign.
 resources:
   repositories:
     - repository: Utilities
@@ -24,25 +25,27 @@ resources:
 trigger:
   branches:
     include:
-    - main
+    - main # Trigger only on the main branch.
   paths:
     include:
-    - '*'
+    - '*' # Include all files within the repository.
+
+pr: none # Do not trigger on PR, this is taken care of by the CI trigger.
 
 variables:
-  - group: Code Signing
+  - group: Code Signing # This must include all the secrets, do not store the certificate in secure files, instead link the variable group to the Azure key vault and retrieve the secrets as well as the certificate from there.
 
 jobs:
   - job: code_signing
     pool:
-      name: vSphere
+      name: vSphere # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
     steps:
       - checkout: self
       - checkout: Azure
       - checkout: VMware
       - checkout: Terraform
       - checkout: Packer
-      - task: AzureCLI@2
+      - task: AzureCLI@2 # Connects to the storage account and retrieves the existing signed files in the container, exports the list to a variable which is then used in the next task.
         displayName: Retrieve a list of existing signed files
         inputs:
           azureSubscription: 'Code-Signing'
@@ -66,8 +69,8 @@ jobs:
             $ExistingFilesJson = ($ExistingFiles | ConvertTo-Json -Compress)
             Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"
 
-      - task: PowerShell@2
-        displayName: Signing
+      - task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
+        displayName: Signing files in each repository
         inputs:
           targetType: 'inline'
           script: |
@@ -131,7 +134,7 @@ jobs:
                 Write-Host "##vso[task.setvariable variable=Success]false"
             }
 
-      - task: AzureFileCopy@5
+      - task: AzureFileCopy@5 # Copies the signed files to the storage account container, the blob prefix is powershell.
         displayName: Copying signed files to Azure Blob
         inputs:
           Destination: 'AzureBlob'
@@ -142,7 +145,7 @@ jobs:
           BlobPrefix: 'powershell'
         condition: and(succeeded(), eq(variables['Success'], 'true'))
 
-      - task: DeleteFiles@1
+      - task: DeleteFiles@1 # Cleaning up the stating directory.
         displayName: Deleting files in staging directory
         inputs:
           SourceFolder: '$(Build.StagingDirectory)'
