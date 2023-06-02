@@ -44,14 +44,14 @@ jobs:
           workingDirectory: '$(Build.StagingDirectory)'
           addSpnToEnvironment: true
           inlineScript: |
-            Write-Output "--- Logging into storage account: $(storage-account), to retrieve a list of already signed files."
+            Write-Output "--- Logging into storage account, to retrieve a list of already signed files."
             $SecurePassword = ConvertTo-SecureString -String $(service-principal-secret) -AsPlainText -Force
             $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
             Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
             Write-Output "--- Logged into Azure."
             Write-Output "--- Searching for existing signed files."
             $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object @{Name="Name";Expression={$_.Name.Split('/')[-1]}}
-            Write-Output "--- Existing files:"
+            Write-Output "--- Existing files in the storage account:"
             Foreach ($File in $ExistingFiles) {
                 Write-Output $File.Name
             }
@@ -68,7 +68,7 @@ jobs:
 
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
 
-            $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)" -Directory | Select-Object -ExpandProperty Name
+            $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)/s" -Directory | Select-Object -ExpandProperty Name
             Write-Output "--- Retrieving a list of files to be signed."
 
             $Files = @()
