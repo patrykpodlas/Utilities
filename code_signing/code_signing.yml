@@ -174,9 +174,11 @@ jobs:
             $Context = $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context
             # Set the hashes
             foreach ($File in $NewFilesAndTheirHashes) {
-                $Hash = $File.SHA256
+                $Metadata = @{
+                    SHA256 = $File.SHA256
+                }
                 Write-Output "Setting metadata for blob '$($File.Name)' with hash: $Hash"
-                Set-AzStorageBlobMetadata -Container $(destination-container) -Blob "powershell/$($File.Name)" -Context $Context -Metadata @{SHA256=$Hash}
+                Set-AzStorageBlobContent -Container $(destination-container) -Blob "powershell/$($File.Name)" -Context $Context -Metadata $Metadata
             }
 
       - task: DeleteFiles@1 # Cleaning up the stating directory.
