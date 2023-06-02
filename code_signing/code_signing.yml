@@ -94,7 +94,7 @@ jobs:
                             # Compare the hash of the file to the hash of the file inside the storage account, the hash in the storage account will have a value of pre-signed script.
                             $FileName = $_.Name
                             $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
-                            if ($ExistingFile -and $ExistingFile.SHA256 -eq $File.SHA256) {
+                            if ($File.SHA256 -and $ExistingFile.SHA256 -eq $File.SHA256) {
                                 Write-Host "File '$FileName' already exists with the same hash in the storage account."
                             } else {$_}
                         }
