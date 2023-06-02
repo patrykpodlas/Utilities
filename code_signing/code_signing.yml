@@ -21,6 +21,11 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Packer
+  webhooks:
+    - webhook: Trigger
+      connection: Trigger-Utilities
+      filters:
+        - path: Azure
 
 trigger:
   branches:
