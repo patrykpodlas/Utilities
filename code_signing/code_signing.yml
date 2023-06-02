@@ -169,7 +169,7 @@ jobs:
                     SHA256 = $File.SHA256
                 }
                 Write-Output "--- Uploading file: $($File.Name) and setting metadata with hash: $($File.SHA256)."
-                Get-AzStorageBlob -Container $(destination-container) -Blob "powershell/$($File.Name)" -Context $Context | Set-AzStorageBlobContent -File $File.Name -Metadata $Metadata -Force | Out-Null
+                et-AzStorageBlobContent -Container $(destination-container) -File $File.Name -Metadata $Metadata -Force | Out-Null
                 Write-Output "--- Blob uploaded."
             }
 
