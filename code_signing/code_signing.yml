@@ -72,6 +72,7 @@ jobs:
             $Files = @()
 
             foreach($Directory in $Directories){
+                Write-Output "--- Getting a list of files from $Directory to scan."
                 $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
             }
 
