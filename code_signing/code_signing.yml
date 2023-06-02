@@ -156,17 +156,21 @@ jobs:
           BlobPrefix: 'powershell'
         condition: and(succeeded(), eq(variables['Success'], 'true'))
 
-      - task: PowerShell@2 # Set blob metadata with SHA256 hash
-        displayName: Set Blob Metadata with SHA256 Hash
+      - task: AzureCLI@2
+        displayName: Update the blobs with the SHA256 hashes
         inputs:
-          targetType: 'inline'
-          script: |
+          azureSubscription: 'Code-Signing'
+          scriptType: 'ps'
+          scriptLocation: 'inlineScript'
+          workingDirectory: '$(Build.StagingDirectory)'
+          addSpnToEnvironment: true
+          inlineScript: |
             Write-Output "--- Logging into storage account, to retrieve a list of already signed files."
             $SecurePassword = ConvertTo-SecureString -String $(service-principal-secret) -AsPlainText -Force
             $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
             Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
             Write-Output "--- Logged into Azure."
-            
+
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
             $DestinationContainer = "$(destination-container)"
             $BlobPrefix = "powershell"
