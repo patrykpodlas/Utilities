@@ -13,6 +13,11 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Azure
+      ref: main
+      trigger:
+        branches:
+          include:
+            - main
     - repository: VMware
       type: github
       endpoint: patrykpodlas
