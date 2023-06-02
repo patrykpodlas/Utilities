@@ -68,11 +68,12 @@ jobs:
 
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
 
-            $AzureFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Azure" -Include '*.ps1' -Recurse
-            $UtilitiesFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Utilities" -Include '*.ps1' -Recurse
-            $VMwareFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/VMware" -Include '*.ps1' -Recurse
-            $TerraformFiles = Get-ChildItem -Path "$(Agent.BuildDirectory)/s/Terraform" -Include '*.ps1' -Recurse
-            $Files = $AzureFiles + $UtilitiesFiles + $VMwareFiles + $TerraformFiles
+            $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)" -Directory | Select-Object -ExpandProperty Name
+            $Files = @()
+
+            foreach($Directory in $Directories){
+                $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
+            }
 
             $Files = $Files | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
