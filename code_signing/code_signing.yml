@@ -177,8 +177,9 @@ jobs:
                 $Metadata = @{
                     SHA256 = $File.SHA256
                 }
-                Write-Output "Setting metadata for blob '$($File.Name)' with hash: $($File.Hash)"
-                Get-AzStorageBlob -Container $(destination-container) -Blob "powershell/$($File.Name)" -Context $Context | Set-AzStorageBlobContent -File $File.Name -Metadata $Metadata -Force
+                Write-Output "--- Setting metadata for blob '$($File.Name)' with hash: $($File.SHA256)."
+                Get-AzStorageBlob -Container $(destination-container) -Blob "powershell/$($File.Name)" -Context $Context | Set-AzStorageBlobContent -File $File.Name -Metadata $Metadata -Force | Out-Null
+                Write-Output "--- Blob uploaded."
             }
 
       - task: DeleteFiles@1 # Cleaning up the stating directory.
