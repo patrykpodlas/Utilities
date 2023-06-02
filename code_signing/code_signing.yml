@@ -89,8 +89,9 @@ jobs:
                         $_ | Add-Member -NotePropertyName "SHA256" -NotePropertyValue $Hash -PassThru | ForEach-Object {
                             $FileName = $_.Name
                             $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
-                            if ($ExistingFile.SHA256 -and $File.SHA256 -eq $Hash) {
+                            if ($ExistingFile -and $ExistingFile.SHA256 -eq $File.SHA256) {
                                 Write-Output "File '$FileName' already exists with the same hash in the storage account."
+                            }
                         }
                     }
                 }
