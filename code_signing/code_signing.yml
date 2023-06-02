@@ -9,18 +9,7 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Azure
-    - repository: VMware
-      type: github
-      endpoint: patrykpodlas
-      name: patrykpodlas/VMware
-    - repository: Terraform
-      type: github
-      endpoint: patrykpodlas
-      name: patrykpodlas/Terraform
-    - repository: Packer
-      type: github
-      endpoint: patrykpodlas
-      name: patrykpodlas/Packer
+
   webhooks:
     - webhook: MyTrigger
       connection: Trigger-Utilities
@@ -49,9 +38,6 @@ jobs:
     steps:
       - checkout: self
       - checkout: Azure
-      - checkout: VMware
-      - checkout: Terraform
-      - checkout: Packer
       - task: AzureCLI@2 # Connects to the storage account and retrieves the existing signed files in the container, exports the list to a variable which is then used in the next task.
         displayName: Retrieve a list of existing signed files
         inputs:
@@ -70,9 +56,6 @@ jobs:
             $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -Property @{Name = "Name"; Expression = { $_.Name.Split('/')[-1] } }, @{Name = "SHA256"; Expression = { $_.ICloudBlob.Metadata["SHA256"] } }
             Write-Output "--- Existing files in the storage account:"
             Write-Output $ExistingFiles
-            foreach ($File in $ExistingFiles) {
-                Write-Output "Name: $($File.Name), SHA256: $($File.SHA256)"
-            }
 
             $ExistingFilesJson = ($ExistingFiles | ConvertTo-Json -Compress)
             Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"
