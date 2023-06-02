@@ -25,7 +25,7 @@ trigger:
   branches:
     include:
     - main
-    paths:
+  paths:
     include:
     - '*'
 pr: none
