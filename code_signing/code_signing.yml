@@ -102,8 +102,8 @@ jobs:
                 }
             }
 
-            # Output the list of files and their hash.
-            Write-Output $Files | Select-Object Name, SHA256
+            $NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
+            Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
 
             $FilteredFiles = $Files #| Where-Object {$ExistingFiles.Name -notcontains $_.Name}
 
@@ -165,28 +165,17 @@ jobs:
           workingDirectory: '$(Build.StagingDirectory)'
           addSpnToEnvironment: true
           inlineScript: |
+            $NewFilesAndTheirHashes = '$(NewFilesAndTheirHashesJson)' | ConvertFrom-Json
             Write-Output "--- Logging into storage account."
             $SecurePassword = ConvertTo-SecureString -String $(service-principal-secret) -AsPlainText -Force
             $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
             Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
             Write-Output "--- Logged into Azure."
 
-            $ExistingFiles = "$(ExistingFilesJson)" | ConvertFrom-Json
-            Write-Output "$(ExistingFilesJson)"
-            $DestinationContainer = "$(destination-container)"
-            $BlobPrefix = "powershell"
-            $Context = $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context
+            # Set the hashes
+            Write-Output $NewFilesAndTheirHashes
 
-            $ExistingFiles | ForEach-Object {
-                $BlobName = "{0}/{1}" -f $BlobPrefix, $_.Name
-                $Blob = Get-AzStorageBlob -Container $DestinationContainer -Blob $BlobName -Context $Context
 
-                if ($Blob -ne $null) {
-                    $Blob.Metadata["SHA256"] = $_.SHA256
-                    $Blob | Set-AzStorageBlobMetadata -Context $Context
-                    Write-Output "Set metadata for blob '$BlobName' with SHA256 hash: $($_.SHA256)"
-                }
-            }
 
       - task: DeleteFiles@1 # Cleaning up the stating directory.
         displayName: Deleting files in staging directory
