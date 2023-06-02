@@ -22,10 +22,11 @@ resources:
       endpoint: patrykpodlas
       name: patrykpodlas/Packer
   webhooks:
-    - webhook: Trigger
+    - webhook: 4200660
       connection: Trigger-Utilities
       filters:
-        - path: Azure
+        - path: patrykpodlas/Azure
+          value: Azure
 
 trigger:
   branches:
