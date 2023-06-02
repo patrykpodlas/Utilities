@@ -161,6 +161,12 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
+            Write-Output "--- Logging into storage account, to retrieve a list of already signed files."
+            $SecurePassword = ConvertTo-SecureString -String $(service-principal-secret) -AsPlainText -Force
+            $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
+            Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
+            Write-Output "--- Logged into Azure."
+            
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
             $DestinationContainer = "$(destination-container)"
             $BlobPrefix = "powershell"
