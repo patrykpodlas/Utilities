@@ -41,6 +41,7 @@ jobs:
       - checkout: Azure
       - checkout: VMware
       - checkout: Terraform
+      - checkout: Packer
       - task: AzureCLI@2
         displayName: Retrieve a list of existing signed files
         inputs:
