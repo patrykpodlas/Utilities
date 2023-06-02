@@ -27,6 +27,8 @@ resources:
       filters:
         - path: patrykpodlas/Azure
           value: Azure
+        - path: action
+          value: closed
 
 trigger:
   branches:
