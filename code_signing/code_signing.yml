@@ -64,18 +64,13 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
-            Write-Output "--- Retrieving a list of files to be signed."
-
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
-
             $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)/s" -Directory | Select-Object -ExpandProperty Name
             Write-Output "--- Retrieving a list of files to be signed."
-
             $Files = @()
-
             foreach($Directory in $Directories){
-                Write-Output "--- Getting a list of files from $Directory to scan."
-                $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/$Directory" -Include '*.ps1' -Recurse
+                Write-Output "--- Getting a list of files from $Directory repository to scan."
+                $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
             }
 
             $Files = $Files | ForEach-Object {
