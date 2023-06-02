@@ -32,6 +32,7 @@ trigger:
   branches:
     include:
     - main # Trigger only on the main branch.
+    - feature-webhook
   paths:
     include:
     - '*' # Include all files within the repository.
