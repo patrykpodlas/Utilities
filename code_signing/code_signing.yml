@@ -1,160 +1,160 @@
 # Include all of the repositories which you want this pipeline to scan for files to sign, make sure you also check them out in the jobs step checkout.
 resources:
-  repositories:
-    - repository: Utilities
-      type: github
-      endpoint: patrykpodlas
-      name: patrykpodlas/Utilities
-    - repository: Azure
-      type: github
-      endpoint: patrykpodlas
-      name: patrykpodlas/Azure
-    - repository: VMware
-      type: github
-      endpoint: patrykpodlas
-      name: patrykpodlas/VMware
-    - repository: Terraform
-      type: github
-      endpoint: patrykpodlas
-      name: patrykpodlas/Terraform
-    - repository: Packer
-      type: github
-      endpoint: patrykpodlas
-      name: patrykpodlas/Packer
-  webhooks:
-    - webhook: MyTrigger
-      connection: Trigger-Utilities
-      filters:
-        - path: action
-          value: closed
+repositories:
+- repository: Utilities
+type: github
+endpoint: patrykpodlas
+name: patrykpodlas/Utilities
+- repository: Azure
+type: github
+endpoint: patrykpodlas
+name: patrykpodlas/Azure
+- repository: VMware
+type: github
+endpoint: patrykpodlas
+name: patrykpodlas/VMware
+- repository: Terraform
+type: github
+endpoint: patrykpodlas
+name: patrykpodlas/Terraform
+- repository: Packer
+type: github
+endpoint: patrykpodlas
+name: patrykpodlas/Packer
+webhooks:
+- webhook: MyTrigger
+connection: Trigger-Utilities
+filters:
+- path: action
+value: closed
 
 trigger:
-  branches:
-    include:
-    - main # Trigger only on the main branch.
-  paths:
-    include:
-    - '*' # Include all files within the repository.
+branches:
+include:
+- main # Trigger only on the main branch.
+paths:
+include:
+- '*' # Include all files within the repository.
 
 pr: none # Do not trigger on PR, this is taken care of by the CI trigger.
 
 variables:
-  - group: Code Signing # This must include all the secrets, do not store the certificate in secure files, instead link the variable group to the Azure key vault and retrieve the secrets as well as the certificate from there.
+- group: Code Signing # This must include all the secrets, do not store the certificate in secure files, instead link the variable group to the Azure key vault and retrieve the secrets as well as the certificate from there.
 
 jobs:
-  - job: code_signing
-    pool:
-      name: vSphere # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
-    steps:
-      - checkout: self
-      - checkout: Azure
-      - checkout: VMware
-      - checkout: Terraform
-      - checkout: Packer
-      - task: AzureCLI@2 # Connects to the storage account and retrieves the existing signed files in the container, exports the list to a variable which is then used in the next task.
-        displayName: Retrieve a list of existing signed files
-        inputs:
-          azureSubscription: 'Code-Signing'
-          scriptType: 'ps'
-          scriptLocation: 'inlineScript'
-          workingDirectory: '$(Build.StagingDirectory)'
-          addSpnToEnvironment: true
-          inlineScript: |
-            Write-Output "--- Logging into storage account, to retrieve a list of already signed files."
-            $SecurePassword = ConvertTo-SecureString -String $(service-principal-secret) -AsPlainText -Force
-            $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
-            Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
-            Write-Output "--- Logged into Azure."
-            Write-Output "--- Searching for existing signed files."
-            $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -Property @{Name = "Name"; Expression = { $_.Name.Split('/')[-1] } }, @{Name = "SHA256"; Expression = { $_.ICloudBlob.Metadata.Values } }
-            Write-Output "--- Existing files in the storage account:"
-            foreach ($File in $ExistingFiles) {
-                Write-Output "Name: $($File.Name), SHA256: $($File.SHA256)"
-            }
+- job: code_signing
+pool:
+name: vSphere # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
+steps:
+- checkout: self
+- checkout: Azure
+- checkout: VMware
+- checkout: Terraform
+- checkout: Packer
+- task: AzureCLI@2 # Connects to the storage account and retrieves the existing signed files in the container, exports the list to a variable which is then used in the next task.
+displayName: Retrieve a list of existing signed files
+inputs:
+azureSubscription: 'Code-Signing'
+scriptType: 'ps'
+scriptLocation: 'inlineScript'
+workingDirectory: '$(Build.StagingDirectory)'
+addSpnToEnvironment: true
+inlineScript: |
+Write-Output "--- Logging into storage account, to retrieve a list of already signed files."
+$SecurePassword = ConvertTo-SecureString -String $(service-principal-secret) -AsPlainText -Force
+$PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
+Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
+Write-Output "--- Logged into Azure."
+Write-Output "--- Searching for existing signed files."
+$ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object -Property @{Name = "Name"; Expression = { $_.Name.Split('/')[-1] } }, @{Name = "SHA256"; Expression = { $_.ICloudBlob.Metadata.SHA256 } }
+Write-Output "--- Existing files in the storage account:"
+foreach ($File in $ExistingFiles) {
+    Write-Output "Name: $($File.Name), SHA256: $($File.SHA256)"
+}
 
-            $ExistingFilesJson = ($ExistingFiles | ConvertTo-Json -Compress)
-            Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"
+$ExistingFilesJson = ($ExistingFiles | ConvertTo-Json -Compress)
+Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"
 
-      - task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
-        displayName: Signing files in each repository
-        inputs:
-          targetType: 'inline'
-          script: |
-            $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
-            $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)/s" -Directory | Select-Object -ExpandProperty Name
-            Write-Output "--- Retrieving a list of files to be signed."
-            $Files = @()
-            foreach($Directory in $Directories){
-                Write-Output "--- Getting a list of files from $Directory repository to scan."
-                $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
-            }
+- task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
+displayName: Signing files in each repository
+inputs:
+targetType: 'inline'
+script: |
+$ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
+$Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)/s" -Directory | Select-Object -ExpandProperty Name
+Write-Output "--- Retrieving a list of files to be signed."
+$Files = @()
+foreach ($Directory in $Directories) {
+    Write-Output "--- Getting a list of files from $Directory repository to scan."
+    $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
+}
 
-            $Files = $Files | ForEach-Object {
-                $FileContent = Get-Content $_ -ErrorAction Ignore
-                if ($FileContent | Select-String -Pattern '#sign-me') {
-                    $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
-                    $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
-                    if (-not ($HasBeginBlock -and $HasEndBlock)) {
-                            Write-Output $_
-                    }
-                }
-            }
+$Files = $Files | ForEach-Object {
+    $FileContent = Get-Content $_ -ErrorAction Ignore
+    if ($FileContent | Select-String -Pattern '#sign-me') {
+        $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
+        $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
+        if (-not ($HasBeginBlock -and $HasEndBlock)) {
+            Write-Output $_
+        }
+    }
+}
 
-            $FilteredFiles = $Files | Where-Object {$ExistingFiles.Name -notcontains $_.Name}
+$FilteredFiles = $Files | Where-Object { $ExistingFiles.Name -notcontains $_.Name }
 
-            if ($FilteredFiles) {
-                Write-Output "--- Creating the code signing certificate from Azure Key Vault."
-                New-Item "$(Build.StagingDirectory)\code_signing_certificate.pfx" -Value $(code-signing-certificate) | Out-Null
-                if (Get-Item -Path "$(Build.StagingDirectory)\code_signing_certificate.pfx") {
-                    Write-Output "--- Successfully created the code signing certificate."
-                }
+if ($FilteredFiles) {
+    Write-Output "--- Creating the code signing certificate from Azure Key Vault."
+    New-Item "$(Build.StagingDirectory)\code_signing_certificate.pfx" -Value $(code-signing-certificate) | Out-Null
+    if (Get-Item -Path "$(Build.StagingDirectory)\code_signing_certificate.pfx") {
+        Write-Output "--- Successfully created the code signing certificate."
+    }
 
-                Write-Output "--- Importing the code signing certificate."
-                $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$(Build.StagingDirectory)\code_signing_certificate.pfx"
+    Write-Output "--- Importing the code signing certificate."
+    $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$(Build.StagingDirectory)\code_signing_certificate.pfx"
 
-                Write-Output "--- Files to sign:"
-                foreach ($File in $FilteredFiles) {
-                    Write-Output $File.Name
-                }
-                foreach ($File in $FilteredFiles) {
-                    Write-Output "--- Copying: $($File.Name) to $(Build.StagingDirectory) and signing."
-                    $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
-                    Write-Output "$($File.Name): $(Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage)"
-                }
+    Write-Output "--- Files to sign:"
+    foreach ($File in $FilteredFiles) {
+        Write-Output $File.Name
+    }
+    foreach ($File in $FilteredFiles) {
+        Write-Output "--- Copying: $($File.Name) to $(Build.StagingDirectory) and signing."
+        $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
+        Write-Output "$($File.Name): $(Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage)"
+    }
 
-                Write-Output "--- Finished signing all the files."
+    Write-Output "--- Finished signing all the files."
 
-                Write-Output "--- Removing the certificate from the certificate store."
-                Write-Output "--- Looking for certificate with thumbprint: $($Certificate.Thumbprint)."
-                Get-Item -Path Cert:\CurrentUser\My\$Certificate.Thumbprint | Remove-Item
-                Write-Output "--- Certificate removed from store."
+    Write-Output "--- Removing the certificate from the certificate store."
+    Write-Output "--- Looking for certificate with thumbprint: $($Certificate.Thumbprint)."
+    Get-Item -Path Cert:\CurrentUser\My\$Certificate.Thumbprint | Remove-Item
+    Write-Output "--- Certificate removed from store."
 
-                Write-Output "--- Removing the certificate from the staging directory."
-                Get-Item -Path $(Build.StagingDirectory)\code_signing_certificate.pfx | Remove-Item
-                Write-Output "--- Certificate removed from the staging directory."
+    Write-Output "--- Removing the certificate from the staging directory."
+    Get-Item -Path $(Build.StagingDirectory)\code_signing_certificate.pfx | Remove-Item
+    Write-Output "--- Certificate removed from the staging directory."
 
-                Write-Host "##vso[task.setvariable variable=Success]true"
+    Write-Host "##vso[task.setvariable variable=Success]true"
 
-            } elseif (!$FilteredFiles) {
-                Write-Output "--- Nothing to sign, or the files already exist in the storage account."
-                Write-Host "##vso[task.setvariable variable=Success]false"
-            }
+} elseif (!$FilteredFiles) {
+    Write-Output "--- Nothing to sign, or the files already exist in the storage account."
+    Write-Host "##vso[task.setvariable variable=Success]false"
+}
 
-      - task: AzureFileCopy@5 # Copies the signed files to the storage account container, the blob prefix is powershell.
-        displayName: Copying signed files to Azure Blob
-        inputs:
-          Destination: 'AzureBlob'
-          azureSubscription: 'Code-Signing'
-          SourcePath: $(Build.StagingDirectory)\*
-          storage: $(storage-account)
-          ContainerName: $(destination-container)
-          BlobPrefix: 'powershell'
-        condition: and(succeeded(), eq(variables['Success'], 'true'))
+- task: AzureFileCopy@5 # Copies the signed files to the storage account container, the blob prefix is powershell.
+displayName: Copying signed files to Azure Blob
+inputs:
+Destination: 'AzureBlob'
+azureSubscription: 'Code-Signing'
+SourcePath: $(Build.StagingDirectory)\*
+storage: $(storage-account)
+ContainerName: $(destination-container)
+BlobPrefix: 'powershell'
+condition: and(succeeded(), eq(variables['Success'], 'true'))
 
-      - task: DeleteFiles@1 # Cleaning up the stating directory.
-        displayName: Deleting files in staging directory
-        inputs:
-          SourceFolder: '$(Build.StagingDirectory)'
-          Contents: '**'
-          Recursive: true
-        condition: and(succeeded(), eq(variables['Success'], 'true'))
+- task: DeleteFiles@1 # Cleaning up the stating directory.
+displayName: Deleting files in staging directory
+inputs:
+SourceFolder: '$(Build.StagingDirectory)'
+Contents: '**'
+Recursive: true
+condition: and(succeeded(), eq(variables['Success'], 'true'))
