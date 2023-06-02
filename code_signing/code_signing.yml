@@ -25,8 +25,8 @@ resources:
     - webhook: MyTrigger
       connection: Trigger-Utilities
       filters:
-        - path: patrykpodlas/Azure
-          value: Azure
+        - path: patrykpodlas/Utilities
+          value: Utilities
 
 trigger:
   branches:
