@@ -94,9 +94,10 @@ jobs:
                             # Compare the hash of the file to the hash of the file inside the storage account, the hash in the storage account will have a value of pre-signed script.
                             $FileName = $_.Name
                             $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
-                            if ($_.SHA256 -and $ExistingFile.SHA256 -ne $_.SHA256) {
+                            if ($ExistingFile.SHA256 -ne $_.SHA256) {
+                                Write-Host "File: $ExistingFile in storage account has a different hash than $FileName to be uploaded."
                                 $_
-                            } else {Write-Host "File '$FileName' already exists with the same hash in the storage account."}
+                            } else {Write-Host "File: $FileName already exists with the same hash in the storage account."}
                         }
                     }
                 }
@@ -144,17 +145,6 @@ jobs:
                 Write-Output "--- Nothing to sign, or the files already exist in the storage account."
                 Write-Host "##vso[task.setvariable variable=Success]false"
             }
-
-      - task: AzureFileCopy@5 # Copies the signed files to the storage account container, the blob prefix is powershell.
-        displayName: Copying signed files to Azure Blob
-        inputs:
-          Destination: 'AzureBlob'
-          azureSubscription: 'Code-Signing'
-          SourcePath: $(Build.StagingDirectory)\*
-          storage: $(storage-account)
-          ContainerName: $(destination-container)
-          BlobPrefix: 'powershell'
-        condition: and(succeeded(), eq(variables['Success'], 'true'))
 
       - task: AzureCLI@2
         displayName: Update the blobs with the SHA256 hashes
