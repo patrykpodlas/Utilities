@@ -92,7 +92,7 @@ jobs:
             }
 
             # Output the list of files and their hash.
-            Write-Output $Files
+            Write-Output $Files | Select-Object *
 
             $FilteredFiles = $Files | Where-Object {$ExistingFiles.Name -notcontains $_.Name}
 
