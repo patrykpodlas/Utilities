@@ -1,3 +1,6 @@
+trigger:
+- main
+
 resources:
   repositories:
     - repository: Utilities
@@ -8,6 +11,10 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Azure
+      trigger:
+        branches:
+          include:
+          - main
     - repository: VMware
       type: github
       endpoint: patrykpodlas
@@ -20,15 +27,6 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Packer
-
-trigger:
-  branches:
-    include:
-    - main
-  paths:
-    include:
-    - '*'
-pr: none
 
 variables:
   - group: Code Signing
