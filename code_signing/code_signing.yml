@@ -9,9 +9,9 @@ resources:
       name: patrykpodlas/Utilities
       ref: main
       trigger:
-      branches:
-        include:
-        - main
+        branches:
+          include:
+            - main
     - repository: Azure
       type: github
       endpoint: patrykpodlas
