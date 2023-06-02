@@ -122,10 +122,11 @@ jobs:
                 foreach ($File in $FilteredFiles) {
                     Write-Output $File.Name
                 }
+
+                Write-Output "--- Copying files to $(Build.StagingDirectory) and signing."
                 foreach ($File in $FilteredFiles) {
-                    Write-Output "--- Copying: $($File.Name) to $(Build.StagingDirectory) and signing."
                     $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
-                    Write-Output "$($File.Name): $(Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage)"
+                    Write-Output "Signing: $($File.Name), Result: $(Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage)"
                 }
 
                 Write-Output "--- Finished signing all the files."
@@ -169,7 +170,7 @@ jobs:
                     SHA256 = $File.SHA256
                 }
                 Write-Output "--- Uploading file: $($File.Name) and setting metadata with hash: $($File.SHA256)."
-                et-AzStorageBlobContent -Container $(destination-container) -File $File.Name -Metadata $Metadata -Force | Out-Null
+                Get-AzStorageBlobContent -Container $(destination-container) -File $File.Name -Metadata $Metadata -Force | Out-Null
                 Write-Output "--- Blob uploaded."
             }
 
