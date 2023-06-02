@@ -69,11 +69,13 @@ jobs:
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
 
             $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)" -Directory | Select-Object -ExpandProperty Name
+            Write-Output "--- Retrieving a list of files to be signed."
+
             $Files = @()
 
             foreach($Directory in $Directories){
                 Write-Output "--- Getting a list of files from $Directory to scan."
-                $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
+                $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/$Directory" -Include '*.ps1' -Recurse
             }
 
             $Files = $Files | ForEach-Object {
