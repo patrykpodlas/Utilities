@@ -4,9 +4,30 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Utilities
+    - repository: Azure
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/Azure
+    - repository: VMware
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/VMware
+    - repository: Terraform
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/Terraform
+    - repository: Packer
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/Packer
 
-pr: none
-trigger: none
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - '*'
 
 variables:
   - group: Code Signing
@@ -16,6 +37,11 @@ jobs:
     pool:
       name: vSphere
     steps:
+      - checkout: self
+      - checkout: Azure
+      - checkout: VMware
+      - checkout: Terraform
+      - checkout: Packer
       - task: AzureCLI@2
         displayName: Retrieve a list of existing signed files
         inputs:
@@ -25,14 +51,14 @@ jobs:
           workingDirectory: '$(Build.StagingDirectory)'
           addSpnToEnvironment: true
           inlineScript: |
-            Write-Output "--- Logging into storage account: $(storage-account), to retrieve a list of already signed files."
+            Write-Output "--- Logging into storage account, to retrieve a list of already signed files."
             $SecurePassword = ConvertTo-SecureString -String $(service-principal-secret) -AsPlainText -Force
             $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
             Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
             Write-Output "--- Logged into Azure."
             Write-Output "--- Searching for existing signed files."
             $ExistingFiles = Get-AzStorageBlob -Container $(destination-container) -Context $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context | Select-Object @{Name="Name";Expression={$_.Name.Split('/')[-1]}}
-            Write-Output "--- Existing files:"
+            Write-Output "--- Existing files in the storage account:"
             Foreach ($File in $ExistingFiles) {
                 Write-Output $File.Name
             }
@@ -45,11 +71,16 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
-            Write-Output "--- Retrieving a list of files to be signed."
-
             $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
+            $Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)/s" -Directory | Select-Object -ExpandProperty Name
+            Write-Output "--- Retrieving a list of files to be signed."
+            $Files = @()
+            foreach($Directory in $Directories){
+                Write-Output "--- Getting a list of files from $Directory repository to scan."
+                $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
+            }
 
-            $Files = Get-ChildItem -Path "$(Build.Repository.LocalPath)" -Include '*.ps1' -Recurse | ForEach-Object {
+            $Files = $Files | ForEach-Object {
                 $FileContent = Get-Content $_ -ErrorAction Ignore
                 if ($FileContent | Select-String -Pattern '#sign-me') {
                     $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
@@ -81,7 +112,7 @@ jobs:
                     $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
                     Write-Output "$($File.Name): $(Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage)"
                 }
-                
+
                 Write-Output "--- Finished signing all the files."
 
                 Write-Output "--- Removing the certificate from the certificate store."
@@ -97,8 +128,6 @@ jobs:
 
             } elseif (!$FilteredFiles) {
                 Write-Output "--- Nothing to sign, or the files already exist in the storage account."
-                Write-Output "--- List of filtered files found in the storage account:"
-                Write-Output $Files | Where-Object {$ExistingFiles.Name -contains $_.Name}
                 Write-Host "##vso[task.setvariable variable=Success]false"
             }
 
