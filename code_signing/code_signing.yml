@@ -21,6 +21,13 @@ resources:
       endpoint: patrykpodlas
       name: patrykpodlas/Packer
 
+trigger:
+  branches:
+    include:
+    - main
+    paths:
+    include:
+    - '*'
 pr: none
 
 variables:
