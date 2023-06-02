@@ -86,14 +86,21 @@ jobs:
                     $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
                     if (-not ($HasBeginBlock -and $HasEndBlock)) {
                         $Hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
-                        $_ | Add-Member -NotePropertyName "SHA256" -NotePropertyValue $Hash -PassThru
+                        $_ | Add-Member -NotePropertyName "SHA256" -NotePropertyValue $Hash -PassThru | ForEach-Object {
+                            $FileName = $_.Name
+                            $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
+                            if ($ExistingFile.SHA256 -and $File.SHA256 -eq $Hash) {
+                                Write-Output "File '$FileName' already exists with the same hash in the storage account."
+                        }
                     }
                 }
             }
 
             # Output the list of files and their hash.
             Write-Output $Files | Select-Object Name, SHA256
-            
+
+            # Compare the hashes between existing files.
+
             $FilteredFiles = $Files | Where-Object {$ExistingFiles.Name -notcontains $_.Name}
 
             if ($FilteredFiles) {
