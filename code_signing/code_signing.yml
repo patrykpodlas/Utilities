@@ -156,6 +156,27 @@ jobs:
           BlobPrefix: 'powershell'
         condition: and(succeeded(), eq(variables['Success'], 'true'))
 
+        - task: PowerShell@2 # Set blob metadata with SHA256 hash
+        displayName: Set Blob Metadata with SHA256 Hash
+        inputs:
+          targetType: 'inline'
+          script: |
+            $ExistingFiles = '$(ExistingFilesJson)' | ConvertFrom-Json
+            $DestinationContainer = "$(destination-container)"
+            $BlobPrefix = "powershell"
+            $Context = $(Get-AzStorageAccount -ResourceGroupName $(storage-account-resource-group-name) -Name $(storage-account)).Context
+
+            $ExistingFiles | ForEach-Object {
+                $BlobName = "{0}/{1}" -f $BlobPrefix, $_.Name
+                $Blob = Get-AzStorageBlob -Container $DestinationContainer -Blob $BlobName -Context $Context
+
+                if ($Blob -ne $null) {
+                    $Blob.Metadata["SHA256"] = $_.SHA256
+                    $Blob | Set-AzStorageBlobMetadata -Context $Context
+                    Write-Output "Set metadata for blob '$BlobName' with SHA256 hash: $($_.SHA256)"
+                }
+            }
+
       - task: DeleteFiles@1 # Cleaning up the stating directory.
         displayName: Deleting files in staging directory
         inputs:
