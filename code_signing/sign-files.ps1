@@ -3,11 +3,11 @@ Param (
 )
 
 $ExistingFiles = $env:ExistingFilesJson | ConvertFrom-Json
-$Directories = Get-ChildItem -Path "$(Agent.BuildDirectory)/s" -Directory | Select-Object -ExpandProperty Name
+$Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory | Select-Object -ExpandProperty Name
 $Files = @()
 foreach ($Directory in $Directories) {
     Write-Output "--- Scanning $Directory repository for files."
-    $Files += Get-ChildItem -Path "$(Agent.BuildDirectory)/s/$Directory" -Include '*.ps1' -Recurse
+    $Files += Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s/$Directory" -Include '*.ps1' -Recurse
 }
 
 Write-Output "--- Applying checks to see if the files need to be signed."
@@ -42,22 +42,22 @@ $FilteredFiles = $Files #| Where-Object {$ExistingFiles.Name -notcontains $_.Nam
 
 if ($FilteredFiles) {
     Write-Output "--- Creating the code signing certificate from Azure Key Vault."
-    New-Item "$(Build.StagingDirectory)\code_signing_certificate.pfx" -Value $CodeSigningCertificate | Out-Null
-    if (Get-Item -Path "$(Build.StagingDirectory)\code_signing_certificate.pfx") {
+    New-Item "$env:BUILD_STAGINGDIRECTORY\code_signing_certificate.pfx" -Value $CodeSigningCertificate | Out-Null
+    if (Get-Item -Path "$env:BUILD_STAGINGDIRECTORY\code_signing_certificate.pfx") {
         Write-Output "--- Successfully created the code signing certificate."
     }
 
     Write-Output "--- Importing the code signing certificate to certificate store."
-    $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$(Build.StagingDirectory)\code_signing_certificate.pfx"
+    $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$env:BUILD_STAGINGDIRECTORY\code_signing_certificate.pfx"
 
     Write-Output "--- Files to be signed:"
     foreach ($File in $FilteredFiles) {
         Write-Output $File.Name
     }
 
-    Write-Output "--- Copying files to $(Build.StagingDirectory) and signing."
+    Write-Output "--- Copying files to $env:BUILD_STAGINGDIRECTORY and signing."
     foreach ($File in $FilteredFiles) {
-        $CopiedFile = Copy-Item -Path $File -Destination $(Build.StagingDirectory) -PassThru | Select-Object -ExpandProperty FullName
+        $CopiedFile = Copy-Item -Path $File -Destination $env:BUILD_STAGINGDIRECTORY -PassThru | Select-Object -ExpandProperty FullName
         Write-Output "Signing: $($File.Name), Result: $(Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage)"
     }
 
@@ -69,7 +69,7 @@ if ($FilteredFiles) {
     Write-Output "--- Certificate removed from store."
 
     Write-Output "--- Removing the certificate from the staging directory."
-    Get-Item -Path $(Build.StagingDirectory)\code_signing_certificate.pfx | Remove-Item
+    Get-Item -Path $env:BUILD_STAGINGDIRECTORY\code_signing_certificate.pfx | Remove-Item
     Write-Output "--- Certificate removed from the staging directory."
 
     Write-Host "##vso[task.setvariable variable=Success]true"
