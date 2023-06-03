@@ -42,12 +42,11 @@ jobs:
         displayName: Retrieve a list of existing signed files
         inputs:
           azureSubscription: 'Code-Signing'
-          scriptType: 'ps'
-          scriptLocation: 'inlineScript'
           workingDirectory: '$(Build.StagingDirectory)'
           addSpnToEnvironment: true
           scriptLocation: 'scriptPath'
           scriptPath: '.\get-list-of-signed-files.ps1'
+          scriptType: 'ps'
 
       - task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
         displayName: Signing files in each repository
