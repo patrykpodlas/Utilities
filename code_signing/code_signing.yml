@@ -21,7 +21,7 @@ trigger:
   branches:
     include:
     - main # Trigger only on the main branch.
-    - feature-shacomparison
+    - improve-readability
   paths:
     include:
     - '*' # Include all files within the repository.
