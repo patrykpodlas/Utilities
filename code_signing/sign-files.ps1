@@ -31,6 +31,8 @@ $Files = $Files | ForEach-Object {
                     $_
                 } else { Write-Host "File: $FileName already exists with the same hash in the storage account." }
             }
+        } else {
+            Write-Host "The file: $_ has #sign-me tag, but is already signed based on the # SIG blocks, therefore not signing."
         }
     }
 }
