@@ -45,7 +45,7 @@ jobs:
           workingDirectory: '$(Build.StagingDirectory)'
           addSpnToEnvironment: true
           scriptLocation: 'scriptPath'
-          scriptPath: '.\get-list-of-signed-files.ps1'
+          scriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\get-list-of-signed-files.ps1'
           scriptType: 'ps'
 
       - task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
