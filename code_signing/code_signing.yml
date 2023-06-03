@@ -47,6 +47,11 @@ jobs:
           scriptLocation: 'scriptPath'
           scriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\get-list-of-signed-files.ps1'
           scriptType: 'ps'
+          arguments: >
+            -ServicePrincipalSecret $(service-principal-secret)
+            -StorageAccountResourceGroupName $(storage-account-resource-group-name)
+            -StorageAccount $(storage-account)
+            -DestinationContainer $(destination-container)
 
       - task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
         displayName: Signing files in each repository
