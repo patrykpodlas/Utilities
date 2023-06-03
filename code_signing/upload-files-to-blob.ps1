@@ -1,11 +1,10 @@
 Param (
-    [string]$NewFilesAndTheirHashesJson,
     [string]$ServicePrincipalSecret,
     [string]$StorageAccountResourceGroupName,
     [string]$StorageAccount
 )
 
-$NewFilesAndTheirHashes = $NewFilesAndTheirHashesJson | ConvertFrom-Json
+$NewFilesAndTheirHashes = $env:NewFilesAndTheirHashesJson | ConvertFrom-Json
 Write-Output "--- Logging into storage account."
 $SecurePassword = ConvertTo-SecureString -String $ServicePrincipalSecret -AsPlainText -Force
 $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)

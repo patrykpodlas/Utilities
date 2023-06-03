@@ -72,7 +72,6 @@ jobs:
           scriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\upload-files-to-blob.ps1'
           scriptType: 'ps'
           arguments: >
-            -NewFilesAndTheirHashesJson $(NewFilesAndTheirHashesJson)
             -ServicePrincipalSecret $(service-principal-secret)
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
