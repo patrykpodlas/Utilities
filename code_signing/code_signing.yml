@@ -75,6 +75,7 @@ jobs:
             -ServicePrincipalSecret $(service-principal-secret)
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
+            -DestinationContainer $(destination-container)
 
       - task: DeleteFiles@1 # Cleaning up the stating directory.
         displayName: Deleting files in staging directory

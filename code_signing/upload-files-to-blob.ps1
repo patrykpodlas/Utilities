@@ -1,7 +1,8 @@
 Param (
     [string]$ServicePrincipalSecret,
     [string]$StorageAccountResourceGroupName,
-    [string]$StorageAccount
+    [string]$StorageAccount,
+    [string]$DestinationContainer
 )
 
 $NewFilesAndTheirHashes = $env:NewFilesAndTheirHashesJson | ConvertFrom-Json
@@ -17,6 +18,6 @@ foreach ($File in $NewFilesAndTheirHashes) {
         SHA256 = $File.SHA256
     }
     Write-Output "--- Uploading file: $($File.Name) and setting metadata with hash: $($File.SHA256)."
-    Set-AzStorageBlobContent -Container $(destination-container) -File $File.Name -Metadata $Metadata -Force -Context $Context | Out-Null
+    Set-AzStorageBlobContent -Container $DestinationContainer -File $File.Name -Metadata $Metadata -Force -Context $Context | Out-Null
     Write-Output "--- Blob uploaded."
 }
