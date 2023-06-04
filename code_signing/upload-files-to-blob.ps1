@@ -6,11 +6,7 @@ Param (
 )
 
 $NewFilesAndTheirHashes = $env:NewFilesAndTheirHashesJson | ConvertFrom-Json
-Write-Output "--- Logging into storage account."
-$SecurePassword = ConvertTo-SecureString -String $ServicePrincipalSecret -AsPlainText -Force
-$PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
-Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
-Write-Output "--- Logged into Azure."
+
 $Context = $(Get-AzStorageAccount -ResourceGroupName $StorageAccountResourceGroupName -Name $StorageAccount).Context
 # Set the hashes
 foreach ($File in $NewFilesAndTheirHashes) {

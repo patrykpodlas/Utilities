@@ -21,6 +21,7 @@ trigger:
   branches:
     include:
     - main # Trigger only on the main branch.
+    - feature-online-agent
   paths:
     include:
     - '*' # Include all files within the repository.
@@ -33,24 +34,23 @@ variables:
 jobs:
   - job: code_signing
     pool:
-      name: vSphere # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
+      vmImage: windows-latest # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
     steps:
       - checkout: self
       - checkout: Azure
-      - task: AzureCLI@2 # Connects to the storage account and retrieves the existing signed files in the container, exports the list to a variable which is then used in the next task.
+
+      - task: AzurePowerShell@5
         displayName: Retrieve a list of existing signed files
         inputs:
           azureSubscription: 'Code-Signing'
-          workingDirectory: '$(Build.StagingDirectory)'
-          addSpnToEnvironment: true
-          scriptLocation: 'scriptPath'
-          scriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\get-list-of-signed-files.ps1'
-          scriptType: 'ps'
-          arguments: >
-            -ServicePrincipalSecret $(service-principal-secret)
+          ScriptType: 'FilePath'
+          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\get-list-of-signed-files.ps1'
+          ScriptArguments: >
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
             -DestinationContainer $(destination-container)
+          azurePowerShellVersion: 'LatestVersion'
+          workingDirectory: '$(Build.StagingDirectory)'
 
       - task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
         displayName: Signing files in each repository
@@ -60,21 +60,19 @@ jobs:
           arguments: >
             -CodeSigningCertificate $(code-signing-certificate)
 
-      - task: AzureCLI@2
-        displayName: Upload the files to blob storage along with the SHA256 metadata
+      - task: AzurePowerShell@5
+        displayName: Upload signed files to blob along with SHA256 metadata
         condition: and(succeeded(), eq(variables['Success'], 'true'))
         inputs:
           azureSubscription: 'Code-Signing'
-          workingDirectory: '$(Build.StagingDirectory)'
-          addSpnToEnvironment: true
-          scriptLocation: 'scriptPath'
-          scriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\upload-files-to-blob.ps1'
-          scriptType: 'ps'
-          arguments: >
-            -ServicePrincipalSecret $(service-principal-secret)
+          ScriptType: 'FilePath'
+          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\upload-files-to-blob.ps1'
+          ScriptArguments: >
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
             -DestinationContainer $(destination-container)
+          azurePowerShellVersion: 'LatestVersion'
+          workingDirectory: '$(Build.StagingDirectory)'
 
       - task: DeleteFiles@1 # Cleaning up the stating directory.
         displayName: Deleting files in staging directory
