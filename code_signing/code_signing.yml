@@ -33,24 +33,24 @@ variables:
 jobs:
   - job: code_signing
     pool:
-      name: vSphere # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
+      vmImage: windows-latest # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
     steps:
       - checkout: self
       - checkout: Azure
-      - task: AzureCLI@2 # Connects to the storage account and retrieves the existing signed files in the container, exports the list to a variable which is then used in the next task.
+
+      - task: AzurePowerShell@5
         displayName: Retrieve a list of existing signed files
         inputs:
           azureSubscription: 'Code-Signing'
-          workingDirectory: '$(Build.StagingDirectory)'
-          addSpnToEnvironment: true
-          scriptLocation: 'scriptPath'
-          scriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\get-list-of-signed-files.ps1'
-          scriptType: 'ps'
-          arguments: >
+          ScriptType: 'FilePath'
+          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\get-list-of-signed-files.ps1'
+          ScriptArguments: >
             -ServicePrincipalSecret $(service-principal-secret)
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
-            -DestinationContainer $(destination-container)
+            -DestinationContainer $(destination-container)'
+          azurePowerShellVersion: 'LatestVersion'
+          workingDirectory: '$(Build.StagingDirectory)''
 
       - task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
         displayName: Signing files in each repository

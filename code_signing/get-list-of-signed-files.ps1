@@ -1,4 +1,5 @@
 Param(
+    [string]
     [string]$ServicePrincipalSecret,
     [string]$StorageAccountResourceGroupName,
     [string]$StorageAccount,
