@@ -61,7 +61,8 @@ jobs:
             -CodeSigningCertificate $(code-signing-certificate)
 
       - task: AzurePowerShell@5
-        displayName: Retrieve a list of existing signed files
+        displayName: Upload signed files to blob along with SHA256 metadata
+        condition: and(succeeded(), eq(variables['Success'], 'true'))
         inputs:
           azureSubscription: 'Code-Signing'
           ScriptType: 'FilePath'
