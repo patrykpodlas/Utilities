@@ -37,7 +37,7 @@ jobs:
     steps:
       - checkout: self
       - checkout: Azure
-
+      
       - task: AzurePowerShell@5
         displayName: Retrieve a list of existing signed files
         inputs:
@@ -50,7 +50,7 @@ jobs:
             -StorageAccount $(storage-account)
             -DestinationContainer $(destination-container)'
           azurePowerShellVersion: 'LatestVersion'
-          workingDirectory: '$(Build.StagingDirectory)''
+          workingDirectory: '$(Build.StagingDirectory)'
 
       - task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
         displayName: Signing files in each repository
