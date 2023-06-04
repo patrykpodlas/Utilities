@@ -33,7 +33,7 @@ variables:
 jobs:
   - job: code_signing
     pool:
-      vmImage: windows-latest # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
+      vmImage: windows-2019 # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
     steps:
       - checkout: self
       - checkout: Azure
