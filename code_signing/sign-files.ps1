@@ -4,8 +4,8 @@ Param (
 
 $ExistingFiles = $env:ExistingFilesJson | ConvertFrom-Json
 $Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory |
-    Where-Object { $_.Name -ne "Utilities" } |
-    Select-Object -ExpandProperty Name
+Where-Object { $_.Name -ne "Utilities" } |
+Select-Object -ExpandProperty Name
 
 $Files = @()
 foreach ($Directory in $Directories) {
@@ -14,6 +14,7 @@ foreach ($Directory in $Directories) {
 }
 
 Write-Output "--- Applying checks to see if the files need to be signed."
+$Results = @()
 $Files = $Files | ForEach-Object {
     $FileContent = Get-Content $_ -ErrorAction Ignore
     # Check if the file has the #sign-me tag
@@ -30,15 +31,29 @@ $Files = $Files | ForEach-Object {
                 $FileName = $_.Name
                 $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
                 if ($ExistingFile.SHA256 -ne $_.SHA256) {
-                    Write-Host "File: $($ExistingFile.Name) in storage account has a different hash than $FileName to be uploaded."
+                    $Results += New-Object PSObject -Property @{
+                        File   = $FileName
+                        Status = "Needs Signing"
+                    }
                     $_
-                } else { Write-Host "File: $FileName already exists with the same hash in the storage account." }
+                } else {
+                    $Results += New-Object PSObject -Property @{
+                        File   = $FileName
+                        Status = "Already Signed"
+                    }
+                }
             }
         } else {
-            Write-Host "File: $($_.Name) has #sign-me tag, but is already signed based on the # SIG blocks, therefore not signing."
+            $Results += New-Object PSObject -Property @{
+                File           = $_.Name
+                Status         = "Contains #sign-me, but # SIG block found"
+                OriginalObject = $_
+            }
         }
     }
 }
+
+$Results | Format-Table -AutoSize
 
 $NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
 Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
