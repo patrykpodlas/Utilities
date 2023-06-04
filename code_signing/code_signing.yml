@@ -33,7 +33,7 @@ variables:
 jobs:
   - job: code_signing
     pool:
-      vmImage: ubuntu-latest # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
+      name: vSphere # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
     steps:
       - checkout: self
       - checkout: Azure
