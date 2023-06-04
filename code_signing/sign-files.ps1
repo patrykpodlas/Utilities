@@ -6,7 +6,7 @@ $ExistingFiles = $env:ExistingFilesJson | ConvertFrom-Json
 $Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory |
     Where-Object { $_.Name -ne "Utilities" } |
     Select-Object -ExpandProperty Name
-    
+
 $Files = @()
 foreach ($Directory in $Directories) {
     Write-Output "--- Scanning $Directory repository for files."
@@ -35,7 +35,7 @@ $Files = $Files | ForEach-Object {
                 } else { Write-Host "File: $FileName already exists with the same hash in the storage account." }
             }
         } else {
-            Write-Host "The file: $($_.Name) has #sign-me tag, but is already signed based on the # SIG blocks, therefore not signing."
+            Write-Host "File: $($_.Name) has #sign-me tag, but is already signed based on the # SIG blocks, therefore not signing."
         }
     }
 }
