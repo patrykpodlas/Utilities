@@ -34,12 +34,14 @@ $Files = $Files | ForEach-Object {
                     $Results += New-Object PSObject -Property @{
                         File   = $FileName
                         Result = "Needs Signing"
+                        SHA256 = $_.SHA256
                     }
                     $_
                 } else {
                     $Results += New-Object PSObject -Property @{
                         File   = $FileName
                         Result = "Already Signed"
+                        SHA256 = $_.SHA256
                     }
                 }
             }
@@ -47,12 +49,13 @@ $Files = $Files | ForEach-Object {
             $Results += New-Object PSObject -Property @{
                 File           = $_.Name
                 Result         = "Contains #sign-me, but # SIG block found"
+                SHA256 = $_.SHA256
             }
         }
     }
 }
 
-$Results | Format-Table -Property File, Result
+$Results | Format-Table -Property File, Result -AutoSize
 
 $NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
 Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
