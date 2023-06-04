@@ -9,7 +9,6 @@ Write-Output "--- Logging into storage account, to retrieve a list of already si
 $SecurePassword = ConvertTo-SecureString -String $ServicePrincipalSecret -AsPlainText -Force
 $PSCredential = New-Object System.Management.Automation.PSCredential($env:ServicePrincipalID, $SecurePassword)
 Import-Module Azure -RequiredVersion 2.1.0
-Import-Module -Name Az.Accounts
 Connect-AzAccount -ServicePrincipal -Credential $PSCredential -Tenant $env:TenantID
 Write-Output "--- Logged into Azure."
 Write-Output "--- Searching for existing signed files."
