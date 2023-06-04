@@ -46,7 +46,6 @@ jobs:
           ScriptType: 'FilePath'
           ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\get-list-of-signed-files.ps1'
           ScriptArguments: >
-            -ServicePrincipalSecret $(service-principal-secret)
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
             -DestinationContainer $(destination-container)
@@ -61,21 +60,18 @@ jobs:
           arguments: >
             -CodeSigningCertificate $(code-signing-certificate)
 
-      - task: AzureCLI@2
-        displayName: Upload the files to blob storage along with the SHA256 metadata
-        condition: and(succeeded(), eq(variables['Success'], 'true'))
+      - task: AzurePowerShell@5
+        displayName: Retrieve a list of existing signed files
         inputs:
           azureSubscription: 'Code-Signing'
-          workingDirectory: '$(Build.StagingDirectory)'
-          addSpnToEnvironment: true
-          scriptLocation: 'scriptPath'
-          scriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\upload-files-to-blob.ps1'
-          scriptType: 'ps'
-          arguments: >
-            -ServicePrincipalSecret $(service-principal-secret)
+          ScriptType: 'FilePath'
+          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\upload-files-to-blob.ps1'
+          ScriptArguments: >
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
             -DestinationContainer $(destination-container)
+          azurePowerShellVersion: 'LatestVersion'
+          workingDirectory: '$(Build.StagingDirectory)'
 
       - task: DeleteFiles@1 # Cleaning up the stating directory.
         displayName: Deleting files in staging directory
