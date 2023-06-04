@@ -55,7 +55,7 @@ $Files = $Files | ForEach-Object {
     }
 }
 
-$Results | Format-Table -Property File, Result -AutoSize
+$Results | Format-Table -Property File, Result, SHA256 -AutoSize
 
 $NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
 Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"

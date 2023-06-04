@@ -12,7 +12,7 @@ Select-Object -Property @{Name = "Name"; Expression = { $_.Name.Split('/')[-1] }
                         @{Name = "SHA256"; Expression = { $_.BlobClient.GetProperties().Value.Metadata.SHA256 } }
 
 Write-Output "--- Existing files in the storage account:"
-$ExistingFiles | Format-Table Name, SHA256
+$ExistingFiles | Format-Table File, SHA256
 
 $ExistingFilesJson = ($ExistingFiles | ConvertTo-Json -Compress)
 Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"
