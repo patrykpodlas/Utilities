@@ -3,7 +3,10 @@ Param (
 )
 
 $ExistingFiles = $env:ExistingFilesJson | ConvertFrom-Json
-$Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory | Select-Object -ExpandProperty Name
+$Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory |
+    Where-Object { $_.Name -ne "Utilities" } |
+    Select-Object -ExpandProperty Name
+    
 $Files = @()
 foreach ($Directory in $Directories) {
     Write-Output "--- Scanning $Directory repository for files."
