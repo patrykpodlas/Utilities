@@ -4,7 +4,7 @@ Param(
     [string]$DestinationContainer
 )
 
-Write-Output "--- Searching for existing signed files."
+Write-Output "--- Searching for existing signed files in the storage account."
 $Context = $(Get-AzStorageAccount -ResourceGroupName $StorageAccountResourceGroupName -Name $StorageAccount).Context
 # Getting list of files in the blob, the object will also contain the existing SHA256 metadata.
 $ExistingFiles = Get-AzStorageBlob -Container $DestinationContainer -Context $Context |
