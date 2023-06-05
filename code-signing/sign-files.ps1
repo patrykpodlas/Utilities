@@ -33,24 +33,30 @@ $Files = $Files | ForEach-Object {
                 if ($ExistingFile.SHA256 -ne $_.SHA256) {
                     $Results += New-Object PSObject -Property @{
                         File   = $FileName
-                        Result = "Needs Signing"
+                        Result = "Needs signing"
                         SHA256 = $_.SHA256
                     }
                     $_
                 } else {
                     $Results += New-Object PSObject -Property @{
                         File   = $FileName
-                        Result = "Already Signed"
+                        Result = "Already signed"
                         SHA256 = $_.SHA256
                     }
                 }
             }
         } else {
             $Results += New-Object PSObject -Property @{
-                File           = $_.Name
-                Result         = "Contains #sign-me, but # SIG block found"
+                File   = $_.Name
+                Result = "Contains #sign-me tag, but # SIG block found"
                 SHA256 = $_.SHA256
             }
+        }
+    } else {
+        $Results += New-Object PSObject -Property @{
+            File   = $_.Name
+            Result = "No #sign-me tag"
+            SHA256 = $_.SHA256
         }
     }
 }
