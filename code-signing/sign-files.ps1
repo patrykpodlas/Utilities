@@ -66,7 +66,7 @@ $Results | Format-Table -Property File, Result, SHA256 -AutoSize
 $NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
 Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
 
-$Results = @()
+$Files = @()
 if ($Files) {
     Write-Output "--- Creating the code signing certificate from Azure Key Vault."
     New-Item "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx" -Value $CodeSigningCertificate | Out-Null
@@ -88,7 +88,7 @@ if ($Files) {
         $SigningResult = Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage
 
         $Results += New-Object PSObject -Property @{
-            File   = $_.Name
+            File   = $File.Name
             Result = $SigningResult
         }
     }

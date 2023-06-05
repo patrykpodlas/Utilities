@@ -16,9 +16,9 @@ foreach ($File in $NewFilesAndTheirHashes) {
     }
     Set-AzStorageBlobContent -Container $DestinationContainer -File $File.Name -Metadata $Metadata -Force -Context $Context | Out-Null
     $Results += New-Object PSObject -Property @{
-        File   = $_.Name
+        File   = $File.Name
         Result = "Blob uploaded"
-        SHA256 = $_.SHA256
+        SHA256 = $File.SHA256
     }
 }
 
