@@ -34,3 +34,36 @@ Scans files in checked out repositories, and applies checks in order:
     1. Name: Code Signing
     2. Link secrets from an Azure key vault as variables.
     3. Add the secrets and certificate to the list of variables.
+
+## Optional
+
+To trigger the pipeline on files added to other repositories that are checked out, you can create a WebHook, this is required if you're not using Azure Repos, if you are using Azure Repos the triggering of the pipeline is supported without a WebHook.
+
+### WebHook Configuration
+
+In GitHub
+1. Payload URL: `https://dev.azure.com/<"OrgName">/_apis/public/distributedtask/webhooks/<"WebHookName">?api-version=6.0-preview`, replace <"">.
+2. Content type: `application/json`
+3. Secret: Generate a secret to secure the payload, this corresponds to the secret in Azure DevOps service connection.
+4. Events to trigger the webhook: For the purpose of this tool, to not generate too many triggers, a pull requests trigger is sufficient.
+
+In Azure DevOps
+1. Create Incoming WebHook service connection.
+   1. WebHook Name: Name corresponding to the name in Payload URL in GitHub
+   2. Secret (optional): Secret generated and entered into GitHub payload.
+   3. Service connection name: Name of the service connection, e.g. Trigger-Utilities, or Trigger-Code-Signing (if this trigger is only for code signing)
+
+In pipeline YAML
+1. Configure appopriate WebHook resource:
+   1. webook: This is an alias
+   2. connection: This is the service connection name.
+   3. filters: These are the filters you wish to filter the payload with for events, in the example below the pipeline is listening for payloads with path: action and value: closed (will trigger when the pull request has been closed).
+
+``` YAML
+  webhooks:
+    - webhook: MyTrigger
+    connection: Trigger-Utilities
+    filters:
+    - path: action
+      value: closed
+```
