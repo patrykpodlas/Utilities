@@ -66,7 +66,7 @@ $Results | Format-Table -Property File, Result, SHA256 -AutoSize
 $NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
 Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
 
-$Files = @()
+$SignedFiles = @()
 if ($Files) {
     Write-Output "--- Creating the code signing certificate from Azure Key Vault."
     New-Item "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx" -Value $CodeSigningCertificate | Out-Null
@@ -77,23 +77,18 @@ if ($Files) {
     Write-Output "--- Importing the code signing certificate to certificate store."
     $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx"
 
-    Write-Output "--- Files to be signed:"
-    foreach ($File in $Files) {
-        Write-Output $File.Name
-    }
-
     Write-Output "--- Copying files to $env:BUILD_STAGINGDIRECTORY and signing."
     foreach ($File in $Files) {
         $CopiedFile = Copy-Item -Path $File -Destination $env:BUILD_STAGINGDIRECTORY -PassThru | Select-Object -ExpandProperty FullName
         $SigningResult = Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage
 
-        $Results += New-Object PSObject -Property @{
+        $SignedFiles += New-Object PSObject -Property @{
             File   = $File.Name
             Result = $SigningResult
         }
     }
 
-    $Results | Format-Table File, Result -AutoSize
+    $SignedFiles | Format-Table File, Result -AutoSize
 
     Write-Output "--- Finished signing all the files."
 
