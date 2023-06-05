@@ -22,4 +22,4 @@ foreach ($File in $NewFilesAndTheirHashes) {
     }
 }
 
-$Results | Select-Object -Property File, Result, SHA256 -AutoSize
+$Results | Format-Table -Property File, Result, SHA256 -AutoSize
