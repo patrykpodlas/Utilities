@@ -4,6 +4,8 @@
 
 Signs files and uploads them to storage account as blobs.
 
+The pipeline uses cloud agent to perform the task, but a self-hosted agent can also be used.
+
 ## Process
 
 Scans files in checked out repositories, and applies checks in order:
@@ -35,11 +37,9 @@ Scans files in checked out repositories, and applies checks in order:
     2. Link secrets from an Azure key vault as variables.
     3. Add the secrets and certificate to the list of variables.
 
-## Optional
+## Optional: WebHook
 
 To trigger the pipeline on files added to other repositories that are checked out, you can create a WebHook, this is required if you're not using Azure Repos, if you are using Azure Repos the triggering of the pipeline is supported without a WebHook.
-
-### WebHook Configuration
 
 In GitHub
 1. Payload URL: `https://dev.azure.com/<"OrgName">/_apis/public/distributedtask/webhooks/<"WebHookName">?api-version=6.0-preview`, replace <"">.
