@@ -64,13 +64,13 @@ $FilteredFiles = $Files #| Where-Object {$ExistingFiles.Name -notcontains $_.Nam
 
 if ($FilteredFiles) {
     Write-Output "--- Creating the code signing certificate from Azure Key Vault."
-    New-Item "$env:BUILD_STAGINGDIRECTORY\code_signing_certificate.pfx" -Value $CodeSigningCertificate | Out-Null
-    if (Get-Item -Path "$env:BUILD_STAGINGDIRECTORY\code_signing_certificate.pfx") {
+    New-Item "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx" -Value $CodeSigningCertificate | Out-Null
+    if (Get-Item -Path "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx") {
         Write-Output "--- Successfully created the code signing certificate."
     }
 
     Write-Output "--- Importing the code signing certificate to certificate store."
-    $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$env:BUILD_STAGINGDIRECTORY\code_signing_certificate.pfx"
+    $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx"
 
     Write-Output "--- Files to be signed:"
     foreach ($File in $FilteredFiles) {
@@ -91,7 +91,7 @@ if ($FilteredFiles) {
     Write-Output "--- Certificate removed from store."
 
     Write-Output "--- Removing the certificate from the staging directory."
-    Get-Item -Path $env:BUILD_STAGINGDIRECTORY\code_signing_certificate.pfx | Remove-Item
+    Get-Item -Path $env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx | Remove-Item
     Write-Output "--- Certificate removed from the staging directory."
 
     Write-Host "##vso[task.setvariable variable=Success]true"

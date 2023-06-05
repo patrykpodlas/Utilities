@@ -32,7 +32,7 @@ variables:
   - group: Code Signing # This must include all the secrets, do not store the certificate in secure files, instead link the variable group to the Azure key vault and retrieve the secrets as well as the certificate from there.
 
 jobs:
-  - job: code_signing
+  - job: code-signing
     pool:
       vmImage: windows-latest # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
     steps:
@@ -44,7 +44,7 @@ jobs:
         inputs:
           azureSubscription: 'Code-Signing'
           ScriptType: 'FilePath'
-          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\get-list-of-signed-files.ps1'
+          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code-signing\get-list-of-signed-files.ps1'
           ScriptArguments: >
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
@@ -56,7 +56,7 @@ jobs:
         displayName: Signing files in each repository
         inputs:
           targetType: filePath
-          filePath: '$(Build.Repository.LocalPath)\Utilities\code_signing\sign-files.ps1'
+          filePath: '$(Build.Repository.LocalPath)\Utilities\code-signing\sign-files.ps1'
           arguments: >
             -CodeSigningCertificate $(code-signing-certificate)
 
@@ -66,7 +66,7 @@ jobs:
         inputs:
           azureSubscription: 'Code-Signing'
           ScriptType: 'FilePath'
-          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code_signing\upload-files-to-blob.ps1'
+          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code-signing\upload-files-to-blob.ps1'
           ScriptArguments: >
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
