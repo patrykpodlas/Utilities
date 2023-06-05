@@ -32,7 +32,7 @@ variables:
   - group: Code Signing # This must include all the secrets, do not store the certificate in secure files, instead link the variable group to the Azure key vault and retrieve the secrets as well as the certificate from there.
 
 jobs:
-  - job: code-signing
+  - job: code_signing
     pool:
       vmImage: windows-latest # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
     steps:
