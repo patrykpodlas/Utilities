@@ -66,9 +66,8 @@ $Results | Format-Table -Property File, Result, SHA256 -AutoSize
 $NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
 Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
 
-$FilteredFiles = $Files #| Where-Object {$ExistingFiles.Name -notcontains $_.Name}
-
-if ($FilteredFiles) {
+$SignedFiles = @()
+if ($Files) {
     Write-Output "--- Creating the code signing certificate from Azure Key Vault."
     New-Item "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx" -Value $CodeSigningCertificate | Out-Null
     if (Get-Item -Path "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx") {
@@ -78,16 +77,18 @@ if ($FilteredFiles) {
     Write-Output "--- Importing the code signing certificate to certificate store."
     $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx"
 
-    Write-Output "--- Files to be signed:"
-    foreach ($File in $FilteredFiles) {
-        Write-Output $File.Name
+    Write-Output "--- Copying files to $env:BUILD_STAGINGDIRECTORY and signing."
+    foreach ($File in $Files) {
+        $CopiedFile = Copy-Item -Path $File -Destination $env:BUILD_STAGINGDIRECTORY -PassThru | Select-Object -ExpandProperty FullName
+        $SigningResult = Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage
+
+        $SignedFiles += New-Object PSObject -Property @{
+            File   = $File.Name
+            Result = $SigningResult
+        }
     }
 
-    Write-Output "--- Copying files to $env:BUILD_STAGINGDIRECTORY and signing."
-    foreach ($File in $FilteredFiles) {
-        $CopiedFile = Copy-Item -Path $File -Destination $env:BUILD_STAGINGDIRECTORY -PassThru | Select-Object -ExpandProperty FullName
-        Write-Output "Signing: $($File.Name), Result: $(Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage)"
-    }
+    $SignedFiles | Format-Table File, Result -AutoSize
 
     Write-Output "--- Finished signing all the files."
 
@@ -102,7 +103,7 @@ if ($FilteredFiles) {
 
     Write-Host "##vso[task.setvariable variable=Success]true"
 
-} elseif (!$FilteredFiles) {
+} elseif (!$Files) {
     Write-Output "--- Nothing to sign, or the files already exist in the storage account."
     Write-Host "##vso[task.setvariable variable=Success]false"
 }
