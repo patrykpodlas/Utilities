@@ -3,15 +3,15 @@ Param (
 )
 
 $ExistingFiles = $env:ExistingFilesJson | ConvertFrom-Json
-$Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory |
-Where-Object { $_.Name -ne "Utilities" } |
-Select-Object -ExpandProperty Name
+$Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory | Where-Object { $_.Name -ne "Utilities" } | Select-Object -ExpandProperty Name
 
 $Files = @()
 foreach ($Directory in $Directories) {
     Write-Output "--- Scanning $Directory repository for files."
     $Files += Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s/$Directory" -Include '*.ps1' -Recurse
 }
+
+Write-Output $Files
 
 Write-Output "--- Applying checks to see if the files need to be signed."
 $Results = @()
