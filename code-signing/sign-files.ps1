@@ -83,7 +83,7 @@ if ($Files) {
 
     Write-Output "--- Copying files to $env:BUILD_STAGINGDIRECTORY and signing."
     foreach ($File in $Files) {
-        $RelativePath = $File.($RelativePath.Replace('/', '\'))
+        $RelativePath = $File.RelativePath.Replace('/', '\')
         $DestinationPath = Join-Path $env:BUILD_STAGINGDIRECTORY $RelativePath
         # Create the destination directory if it does not exist
         $DestinationDirectory = Split-Path $DestinationPath -Parent
