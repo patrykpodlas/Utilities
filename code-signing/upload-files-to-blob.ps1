@@ -22,4 +22,4 @@ foreach ($File in $NewFilesAndTheirHashes) {
     }
 }
 
-$Results | Format-Table -Property RelativePathBlob, Result, SHA256 -AutoSize
+$Results | Format-Table -Property RelativePathBlob, Result, SHA256 -AutoSize -Wrap
