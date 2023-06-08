@@ -38,14 +38,14 @@ $Files = $Files | ForEach-Object {
                     $Results += New-Object PSObject -Property @{
                         File   = $FileName
                         Result = "Needs signing"
-                        SHA256 = $_.SHA256
+                        SHA256 = $_.SHA256 | Out-String -Width 200
                     }
                     $_
                 } else {
                     $Results += New-Object PSObject -Property @{
                         File   = $FileName
                         Result = "Already signed"
-                        SHA256 = $_.SHA256
+                        SHA256 = $_.SHA256 | Out-String -Width 200
                     }
                 }
             }
@@ -53,20 +53,20 @@ $Files = $Files | ForEach-Object {
             $Results += New-Object PSObject -Property @{
                 File   = $_.Name
                 Result = "Contains #sign-me tag, but # SIG block found"
-                SHA256 = $_.SHA256
+                SHA256 = $_.SHA256 | Out-String -Width 200
             }
         }
     } else {
         $Results += New-Object PSObject -Property @{
             File   = $_.Name
             Result = "No #sign-me tag"
-            SHA256 = $_.SHA256
+            SHA256 = $_.SHA256 | Out-String -Width 200
         }
     }
 }
 
 # Outputs a table with the results, but the $Files variables will only contain the files that need to be signed.
-$Results | Format-Table -Property File, Result, SHA256 -AutoSize -Wrap
+$Results | Format-Table -Property File, Result, SHA256 -AutoSize
 
 #$NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
 #Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
