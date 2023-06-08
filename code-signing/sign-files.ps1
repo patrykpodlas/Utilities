@@ -83,7 +83,14 @@ if ($Files) {
 
     Write-Output "--- Copying files to $env:BUILD_STAGINGDIRECTORY and signing."
     foreach ($File in $Files) {
-        $CopiedFile = Copy-Item -Path $File -Destination $env:BUILD_STAGINGDIRECTORY -PassThru | Select-Object -ExpandProperty FullName
+        $RelativePath = $File.($RelativePath.Replace('/', '\'))
+        $DestinationPath = Join-Path $env:BUILD_STAGINGDIRECTORY $RelativePath
+        # Create the destination directory if it does not exist
+        $DestinationDirectory = Split-Path $DestinationPath -Parent
+        if (-not (Test-Path $DestinationDirectory)) {
+            New-Item -ItemType Directory -Path $DestinationDirectory | Out-Null
+        }
+        $CopiedFile = Copy-Item -Path $File -Destination $DestinationPath -PassThru | Select-Object -ExpandProperty FullName
         $SigningResult = Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage
 
         $SignedFiles += New-Object PSObject -Property @{
