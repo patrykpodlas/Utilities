@@ -104,11 +104,10 @@ if ($Files) {
         }
     }
 
-    $SignedFiles | Format-Table RelativePath, Result -AutoSize
+    $SignedFiles | Format-Table RelativePath, Result, SHA256 -AutoSize
 
     $NewFilesAndTheirHashesJson = ($SignedFiles | ConvertTo-Json -Compress)
     Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
-    Write-Output $NewFilesAndTheirHashesJson
 
     Write-Output "--- Finished signing all the files."
 
