@@ -25,7 +25,6 @@ trigger:
   branches:
     include:
     - main # Trigger only on the main branch.
-    - feature-duplicate-files
   paths:
     include:
     - '*' # Include all files within the repository.
@@ -80,10 +79,10 @@ jobs:
           azurePowerShellVersion: 'LatestVersion'
           workingDirectory: '$(Build.StagingDirectory)'
 
-      #- task: DeleteFiles@1 # Cleaning up the stating directory.
-        #displayName: Deleting files in staging directory
-        #condition: and(succeeded(), eq(variables['Success'], 'true'))
-        #inputs:
-          #SourceFolder: '$(Build.StagingDirectory)'
-          #Contents: '**'
-          #Recursive: true
+      - task: DeleteFiles@1 # Cleaning up the stating directory.
+        displayName: Deleting files in staging directory
+        condition: and(succeeded(), eq(variables['Success'], 'true'))
+        inputs:
+          SourceFolder: '$(Build.StagingDirectory)'
+          Contents: '**'
+          Recursive: true
