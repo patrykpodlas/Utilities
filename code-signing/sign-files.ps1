@@ -108,6 +108,7 @@ if ($Files) {
 
     $NewFilesAndTheirHashesJson = ($SignedFiles | ConvertTo-Json -Compress)
     Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
+    Write-Output $NewFilesAndTheirHashesJson
 
     Write-Output "--- Finished signing all the files."
 
