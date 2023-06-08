@@ -105,7 +105,7 @@ if ($Files) {
         }
     }
 
-    $SignedFiles | Format-Table RelativePathBlob, Result, SHA256 -AutoSize
+    $SignedFiles | Format-Table RelativePathBlob, RelativePath, Result, SHA256 -AutoSize
 
     $NewFilesAndTheirHashesJson = ($SignedFiles | ConvertTo-Json -Compress)
     Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"

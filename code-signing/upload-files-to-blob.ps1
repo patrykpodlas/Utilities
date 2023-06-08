@@ -11,6 +11,7 @@ $Context = $(Get-AzStorageAccount -ResourceGroupName $StorageAccountResourceGrou
 # Upload to blob and set the hashes
 $Results = @()
 foreach ($File in $NewFilesAndTheirHashes) {
+    $BlobPrefix = $File.RelativePath
     $Metadata = @{
         SHA256 = $File.SHA256
     }
