@@ -15,7 +15,7 @@ foreach ($Directory in $Directories) {
     }
 }
 $Files | Get-Member
-Write-Output $Files
+Write-Output $Files | Select-Object Name, FullName, RelativePath
 
 Write-Output "--- Applying checks to see if the files need to be signed."
 $Results = @()
