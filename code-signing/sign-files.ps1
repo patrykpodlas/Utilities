@@ -32,7 +32,7 @@ $Files = $Files | ForEach-Object {
             # Add the hash to the object property
             $_ | Add-Member -NotePropertyName "SHA256" -NotePropertyValue $Hash -PassThru | ForEach-Object {
                 # Compare the hash of the file to the hash of the file inside the storage account, the hash in the storage account will have a value of pre-signed script.
-                $FileName = $_.Name
+                $FileName = $_.RelativePath
                 $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
                 if ($ExistingFile.SHA256 -ne $_.SHA256) {
                     $Results += New-Object PSObject -Property @{
