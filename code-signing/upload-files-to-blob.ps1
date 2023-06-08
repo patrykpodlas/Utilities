@@ -18,7 +18,7 @@ foreach ($File in $NewFilesAndTheirHashes) {
     $Results += New-Object PSObject -Property @{
         RelativePathBlob = $File.RelativePathBlob
         Result           = "Blob uploaded"
-        SHA256           = $File.SHA256
+        SHA256           = $File.SHA256 | Out-String -Width 200
     }
 }
 

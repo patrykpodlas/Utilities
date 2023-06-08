@@ -10,7 +10,7 @@ $Context = $(Get-AzStorageAccount -ResourceGroupName $StorageAccountResourceGrou
 $ExistingFiles = Get-AzStorageBlob -Container $DestinationContainer -Context $Context | Select-Object -Property Name, @{Name = "SimpleName"; Expression = { $_.Name.Split('/')[-1] } }, @{Name = "SHA256"; Expression = { $_.BlobClient.GetProperties().Value.Metadata.SHA256 } }
 
 Write-Output "--- Existing files in the storage account:"
-$ExistingFiles | Format-Table Name, SimpleName, SHA256
+$ExistingFiles | Format-Table Name, SimpleName, SHA256  | Out-String -Width 200
 
 $ExistingFilesJson = ($ExistingFiles | ConvertTo-Json -Compress)
 Write-Host "##vso[task.setvariable variable=ExistingFilesJson;]$ExistingFilesJson"

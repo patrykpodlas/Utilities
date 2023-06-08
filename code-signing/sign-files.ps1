@@ -101,7 +101,7 @@ if ($Files) {
             RelativePathBlob = $File.RelativePath
             RelativePath     = $RelativePath
             Result           = $SigningResult
-            SHA256           = $File.SHA256
+            SHA256           = $File.SHA256 | Out-String -Width 200
         }
     }
 
