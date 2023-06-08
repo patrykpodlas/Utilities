@@ -38,6 +38,7 @@ variables:
 jobs:
   - job: code_signing
     pool:
+      name: vSphere
       vmImage: windows-latest # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
     steps:
       - checkout: self
