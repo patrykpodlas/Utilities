@@ -94,7 +94,7 @@ if ($Files) {
         $SigningResult = Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage
 
         $SignedFiles += New-Object PSObject -Property @{
-            File   = $File.Name
+            File   = $File.RelativePath
             Result = $SigningResult
         }
     }
