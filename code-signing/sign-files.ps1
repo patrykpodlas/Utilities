@@ -66,11 +66,7 @@ $Files = $Files | ForEach-Object {
 }
 
 # Outputs a table with the results, but the $Files variables will only contain the files that need to be signed.
-
-$Results | Format-Table -Property File, Result, @{Name = "SHA256"; Expression = { $_.SHA256 | Out-String -Width 200 } } -AutoSize
-
-#$NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
-#Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
+$Results | Format-Table -Property File, Result, SHA256 | Out-String -Width 200
 
 $SignedFiles = @()
 if ($Files) {
@@ -106,7 +102,7 @@ if ($Files) {
         }
     }
 
-    $SignedFiles | Format-Table RelativePathBlob, RelativePath, Result, @{Name = "SHA256"; Expression = { $_.SHA256 | Out-String -Width 200 } } -AutoSize
+    $SignedFiles | Format-Table RelativePathBlob, RelativePath, Result, SHA256 | Out-string -Width 200
 
     $NewFilesAndTheirHashesJson = ($SignedFiles | ConvertTo-Json -Compress)
     Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"

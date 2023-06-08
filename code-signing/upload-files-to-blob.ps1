@@ -22,4 +22,4 @@ foreach ($File in $NewFilesAndTheirHashes) {
     }
 }
 
-$Results | Format-Table -Property RelativePathBlob, Result, @{Name = "SHA256"; Expression = { $_.SHA256 | Out-String -Width 200 } } -AutoSize
+$Results | Format-Table -Property RelativePathBlob, Result, SHA256 | Out-String -Width 200
