@@ -15,7 +15,7 @@ foreach ($Directory in $Directories) {
     }
 }
 
-$Files | Format-Table -Property Name, FullName, RelativePath
+$Files | Format-Table -Property Name, FullName, RelativePath | Out-String -Width 200
 
 Write-Output "--- Applying checks to see if the files need to be signed."
 $Results = @()
