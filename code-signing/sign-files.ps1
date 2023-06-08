@@ -38,14 +38,14 @@ $Files = $Files | ForEach-Object {
                     $Results += New-Object PSObject -Property @{
                         File   = $FileName
                         Result = "Needs signing"
-                        SHA256 = $_.SHA256 | Out-String -Width 200
+                        SHA256 = $_.SHA256
                     }
                     $_
                 } else {
                     $Results += New-Object PSObject -Property @{
                         File   = $FileName
                         Result = "Already signed"
-                        SHA256 = $_.SHA256 | Out-String -Width 200
+                        SHA256 = $_.SHA256
                     }
                 }
             }
@@ -53,20 +53,21 @@ $Files = $Files | ForEach-Object {
             $Results += New-Object PSObject -Property @{
                 File   = $_.Name
                 Result = "Contains #sign-me tag, but # SIG block found"
-                SHA256 = $_.SHA256 | Out-String -Width 200
+                SHA256 = $_.SHA256
             }
         }
     } else {
         $Results += New-Object PSObject -Property @{
             File   = $_.Name
             Result = "No #sign-me tag"
-            SHA256 = $_.SHA256 | Out-String -Width 200
+            SHA256 = $_.SHA256
         }
     }
 }
 
 # Outputs a table with the results, but the $Files variables will only contain the files that need to be signed.
-$Results | Format-Table -Property File, Result, SHA256 -AutoSize
+
+$Results | Format-Table -Property File, Result, @{Name = "SHA256"; Expression = { $_.SHA256 | Out-String -Width 200 } } -AutoSize
 
 #$NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
 #Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
@@ -101,11 +102,11 @@ if ($Files) {
             RelativePathBlob = $File.RelativePath
             RelativePath     = $RelativePath
             Result           = $SigningResult
-            SHA256           = $File.SHA256 | Out-String -Width 200
+            SHA256           = $File.SHA256
         }
     }
 
-    $SignedFiles | Format-Table RelativePathBlob, RelativePath, Result, SHA256 -AutoSize -Wrap
+    $SignedFiles | Format-Table RelativePathBlob, RelativePath, Result, @{Name = "SHA256"; Expression = { $_.SHA256 | Out-String -Width 200 } } -AutoSize
 
     $NewFilesAndTheirHashesJson = ($SignedFiles | ConvertTo-Json -Compress)
     Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"

@@ -18,8 +18,8 @@ foreach ($File in $NewFilesAndTheirHashes) {
     $Results += New-Object PSObject -Property @{
         RelativePathBlob = $File.RelativePathBlob
         Result           = "Blob uploaded"
-        SHA256           = $File.SHA256 | Out-String -Width 200
+        SHA256           = $File.SHA256
     }
 }
 
-$Results | Format-Table -Property RelativePathBlob, Result, SHA256 -AutoSize -Wrap
+$Results | Format-Table -Property RelativePathBlob, Result, @{Name = "SHA256"; Expression = { $_.SHA256 | Out-String -Width 200 } } -AutoSize
