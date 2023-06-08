@@ -98,13 +98,14 @@ if ($Files) {
         $SigningResult = Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage
 
         $SignedFiles += New-Object PSObject -Property @{
-            RelativePath = $File.RelativePath
-            Result       = $SigningResult
-            SHA256       = $File.SHA256
+            RelativePathBlob = $File.RelativePath
+            RelativePath     = $RelativePath
+            Result           = $SigningResult
+            SHA256           = $File.SHA256
         }
     }
 
-    $SignedFiles | Format-Table RelativePath, Result, SHA256 -AutoSize
+    $SignedFiles | Format-Table RelativePathBlob, Result, SHA256 -AutoSize
 
     $NewFilesAndTheirHashesJson = ($SignedFiles | ConvertTo-Json -Compress)
     Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
