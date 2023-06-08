@@ -65,13 +65,15 @@ $Files = $Files | ForEach-Object {
     }
 }
 
+# Outputs a table with the results, but the $Files variables will only contain the files that need to be signed.
 $Results | Format-Table -Property File, Result, SHA256 -AutoSize
 
-$NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
-Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
+#$NewFilesAndTheirHashesJson = ($Files | ConvertTo-Json -Compress)
+#Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
 
 $SignedFiles = @()
 if ($Files) {
+    # Code signing certificate block.
     Write-Output "--- Creating the code signing certificate from Azure Key Vault."
     New-Item "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx" -Value $CodeSigningCertificate | Out-Null
     if (Get-Item -Path "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx") {
@@ -80,8 +82,10 @@ if ($Files) {
 
     Write-Output "--- Importing the code signing certificate to certificate store."
     $Certificate = Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -FilePath "$env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx"
+    # Code signing certificate block end.
 
     Write-Output "--- Copying files to $env:BUILD_STAGINGDIRECTORY and signing."
+    # For each File in Files (that need to be signed), copy them over to their relative path in staging directory so that files can be of the same name.
     foreach ($File in $Files) {
         $RelativePath = $File.RelativePath.Replace('/', '\')
         $DestinationPath = Join-Path $env:BUILD_STAGINGDIRECTORY $RelativePath
@@ -94,12 +98,16 @@ if ($Files) {
         $SigningResult = Set-AuthenticodeSignature -Certificate $Certificate -FilePath $CopiedFile -TimestampServer 'http://timestamp.sectigo.com' | Select-Object -ExpandProperty StatusMessage
 
         $SignedFiles += New-Object PSObject -Property @{
-            File   = $File.RelativePath
-            Result = $SigningResult
+            RelativePath = $File.RelativePath
+            Result       = $SigningResult
+            SHA256       = $File.SHA256
         }
     }
 
-    $SignedFiles | Format-Table File, Result -AutoSize
+    $SignedFiles | Format-Table RelativePath, Result -AutoSize
+
+    $NewFilesAndTheirHashesJson = ($SignedFiles | ConvertTo-Json -Compress)
+    Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
 
     Write-Output "--- Finished signing all the files."
 
