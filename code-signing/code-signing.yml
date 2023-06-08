@@ -9,6 +9,10 @@ resources:
       type: github
       endpoint: patrykpodlas
       name: patrykpodlas/Azure
+    - repository: VMware
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/VMware
 
   webhooks:
     - webhook: MyTrigger
@@ -33,10 +37,12 @@ variables:
 jobs:
   - job: code_signing
     pool:
+      name: vSphere
       vmImage: windows-latest # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
     steps:
       - checkout: self
       - checkout: Azure
+      - checkout: VMware
 
       - task: AzurePowerShell@5
         displayName: Retrieve a list of existing signed files
