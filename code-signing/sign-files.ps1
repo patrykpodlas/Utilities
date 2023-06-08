@@ -8,9 +8,13 @@ $Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory | Wh
 $Files = @()
 foreach ($Directory in $Directories) {
     Write-Output "--- Scanning $Directory repository for files."
-    $Files += Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s/$Directory" -Include '*.ps1' -Recurse
+    $RepositoryRoot = "$env:AGENT_BUILDDIRECTORY/s/$Directory"
+    $Files += Get-ChildItem -Path $RepositoryRoot -Include '*.ps1' -Recurse | ForEach-Object {
+        $RelativePath = $_.FullName.Substring($RepositoryRoot.Length + 1)
+        $_ | Add-Member -NotePropertyName "RelativePath" -NotePropertyValue $RelativePath -PassThru
+    }
 }
-
+$Files | Get-Member
 Write-Output $Files
 
 Write-Output "--- Applying checks to see if the files need to be signed."
