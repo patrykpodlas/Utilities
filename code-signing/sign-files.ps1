@@ -14,7 +14,7 @@ foreach ($Directory in $Directories) {
         $_ | Add-Member -NotePropertyName "RelativePath" -NotePropertyValue ($RelativePath.Replace('\', '/')) -PassThru
     }
 }
-$Files | Get-Member
+
 $Files | Format-Table -Property Name, FullName, RelativePath
 
 Write-Output "--- Applying checks to see if the files need to be signed."
