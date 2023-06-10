@@ -1,0 +1,41 @@
+# Include all of the repositories which you want this pipeline to scan for files to sign, make sure you also check them out in the jobs step checkout.
+resources:
+  repositories:
+    - repository: Utilities
+      type: github
+      endpoint: patrykpodlas
+      name: patrykpodlas/Utilities
+
+trigger:
+  branches:
+    include:
+    - main # Trigger only on the main branch.
+  paths:
+    include:
+    - '*' # Include all files within the repository.
+
+pr: none # Do not trigger on PR, this is taken care of by the CI trigger.
+
+variables:
+  - group: Generate Certificates # This must include all the secrets, do not store the certificate in secure files, instead link the variable group to the Azure key vault and retrieve the secrets as well as the certificate from there.
+
+jobs:
+  - job: generate_certificates
+    pool:
+      name: vSphere # For this pipeline, this agent can be an online agent as it does not connect to any on-premises resources.
+    steps:
+      - checkout: self
+
+      - task: AzurePowerShell@5
+        displayName: Generate certificates
+        inputs:
+          azureSubscription: 'Generate-Certificates'
+          ScriptType: 'FilePath'
+          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\generate-certificates.ps1'
+          ScriptArguments: >
+            -GDKey $(GDKey)
+            -GDSecret $(GDSecret)
+            -Email $(Email)
+            -Hostname $(Hostname)
+          azurePowerShellVersion: 'LatestVersion'
+          workingDirectory: '$(Build.StagingDirectory)'
