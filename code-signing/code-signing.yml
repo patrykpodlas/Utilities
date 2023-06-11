@@ -53,6 +53,7 @@ jobs:
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
             -DestinationContainer $(destination-container)
+            -ExecutablesContainer $(executables-container)
           azurePowerShellVersion: 'LatestVersion'
           workingDirectory: '$(Build.StagingDirectory)'
 
