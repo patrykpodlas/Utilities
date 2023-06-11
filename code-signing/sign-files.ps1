@@ -118,9 +118,9 @@ if ($Files) {
     Get-Item -Path $env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx | Remove-Item
     Write-Output "--- Certificate removed from the staging directory."
 
-    Write-Host "##vso[task.setvariable variable=Success]true"
+    Write-Host "##vso[task.setvariable variable=NeedToSignScripts]true"
 
 } elseif (!$Files) {
     Write-Output "--- Nothing to sign, or the files already exist in the storage account."
-    Write-Host "##vso[task.setvariable variable=Success]false"
+    Write-Host "##vso[task.setvariable variable=NeedToSignScripts]false"
 }
