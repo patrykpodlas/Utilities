@@ -9,7 +9,7 @@ $Files = @()
 foreach ($Directory in $Directories) {
     Write-Output "--- Scanning $Directory repository for files."
     $RepositoryRoot = "$env:AGENT_BUILDDIRECTORY/s/$Directory"
-    $Files += Get-ChildItem -Path $RepositoryRoot -Include '*.ps1' -Recurse | ForEach-Object {
+    $Files += Get-ChildItem -Path $RepositoryRoot -Include '*.exe' -Recurse | ForEach-Object {
         $RelativePath = Join-Path $Directory ($_.FullName.Substring($RepositoryRoot.Length + 1))
         $_ | Add-Member -NotePropertyName "RelativePath" -NotePropertyValue ($RelativePath.Replace('\', '/')) -PassThru
     }
@@ -20,52 +20,36 @@ $Files | Format-Table -Property Name, FullName, RelativePath | Out-String -Width
 Write-Output "--- Applying checks to see if the files need to be signed."
 $Results = @()
 $Files = $Files | ForEach-Object {
-    $FileContent = Get-Content $_ -ErrorAction Ignore
-    # Check if the file has the #sign-me tag
-    if ($FileContent | Select-String -Pattern '#sign-me') {
-        # If it does, check if it's already signed, we do not want to sign already signed script.
-        $HasBeginBlock = $FileContent | Select-String -Pattern '# SIG # Begin signature block'
-        $HasEndBlock = $FileContent | Select-String -Pattern '# SIG # End signature block'
-        # If it doesn't have the signature blocks then calculate the hash of the file to be signed
-        if (-not ($HasBeginBlock -and $HasEndBlock)) {
-            $Hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
-            # Add the hash to the object property
-            $_ | Add-Member -NotePropertyName "SHA256" -NotePropertyValue $Hash -PassThru | ForEach-Object {
-                # Compare the hash of the file to the hash of the file inside the storage account, the hash in the storage account will have a value of pre-signed script.
-                $FileName = $_.RelativePath
-                $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
-                if ($ExistingFile.SHA256 -ne $_.SHA256) {
-                    $Results += New-Object PSObject -Property @{
-                        File   = $FileName
-                        Result = "Needs signing"
-                        SHA256 = $_.SHA256
-                    }
-                    $_
-                } else {
-                    $Results += New-Object PSObject -Property @{
-                        File   = $FileName
-                        Result = "Already signed"
-                        SHA256 = $_.SHA256
-                    }
+    $SignedStatus = Get-AuthenticodeSignature -FilePath $_ -ErrorAction Ignore
+    if ($SignedStatus.Status -ne "Valid") {
+        $Hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
+        $_ | Add-Member -NotePropertyName "SHA256" -NotePropertyValue $Hash -PassThru | ForEach-Object {
+            $FileName = $_.RelativePath
+            $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
+            if ($ExistingFile.SHA256 -ne $_.SHA256) {
+                $Results += New-Object PSObject -Property @{
+                    File   = $FileName
+                    Result = "Needs signing"
+                    SHA256 = $_.SHA256
                 }
-            }
-        } else {
-            $Results += New-Object PSObject -Property @{
-                File   = $_.Name
-                Result = "Contains #sign-me tag, but # SIG block found"
-                SHA256 = $_.SHA256
+                $_
+            } else {
+                $Results += New-Object PSObject -Property @{
+                    File   = $FileName
+                    Result = "Already signed"
+                    SHA256 = $_.SHA256
+                }
             }
         }
     } else {
         $Results += New-Object PSObject -Property @{
             File   = $_.Name
-            Result = "No #sign-me tag"
+            Result = "Already Signed"
             SHA256 = $_.SHA256
         }
     }
 }
 
-# Outputs a table with the results, but the $Files variables will only contain the files that need to be signed.
 $Results | Format-Table -Property File, Result, SHA256 | Out-String -Width 200
 
 $SignedFiles = @()
@@ -104,8 +88,8 @@ if ($Files) {
 
     $SignedFiles | Format-Table RelativePathBlob, RelativePath, Result, SHA256 | Out-string -Width 200
 
-    $NewFilesAndTheirHashesJson = ($SignedFiles | ConvertTo-Json -Compress)
-    Write-Host "##vso[task.setvariable variable=NewFilesAndTheirHashesJson;]$NewFilesAndTheirHashesJson"
+    $NewExecutablesAndTheirHashesJson = ($SignedFiles | ConvertTo-Json -Compress)
+    Write-Host "##vso[task.setvariable variable=NewExecutablesAndTheirHashesJson;]$NewExecutablesAndTheirHashesJson"
 
     Write-Output "--- Finished signing all the files."
 
@@ -118,9 +102,9 @@ if ($Files) {
     Get-Item -Path $env:BUILD_STAGINGDIRECTORY\code-signing-certificate.pfx | Remove-Item
     Write-Output "--- Certificate removed from the staging directory."
 
-    Write-Host "##vso[task.setvariable variable=Success]true"
+    Write-Host "##vso[task.setvariable variable=NeedToSignExecutables]true"
 
 } elseif (!$Files) {
     Write-Output "--- Nothing to sign, or the files already exist in the storage account."
-    Write-Host "##vso[task.setvariable variable=Success]false"
+    Write-Host "##vso[task.setvariable variable=NeedToSignExecutables]false"
 }

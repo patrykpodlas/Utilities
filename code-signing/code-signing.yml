@@ -44,7 +44,7 @@ jobs:
       - checkout: VMware
 
       - task: AzurePowerShell@5
-        displayName: Retrieve a list of existing signed files
+        displayName: Retrieve a list of signed files in blob storage
         inputs:
           azureSubscription: 'Code-Signing'
           ScriptType: 'FilePath'
@@ -53,20 +53,29 @@ jobs:
             -StorageAccountResourceGroupName $(storage-account-resource-group-name)
             -StorageAccount $(storage-account)
             -DestinationContainer $(destination-container)
+            -ExecutablesContainer $(executables-container)
           azurePowerShellVersion: 'LatestVersion'
           workingDirectory: '$(Build.StagingDirectory)'
 
       - task: PowerShell@2 # Scans the files in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
-        displayName: Signing files in each repository
+        displayName: Scanning and signing PowerShell scripts
         inputs:
           targetType: filePath
-          filePath: '$(Build.Repository.LocalPath)\Utilities\code-signing\sign-files.ps1'
+          filePath: '$(Build.Repository.LocalPath)\Utilities\code-signing\sign-powershell.ps1'
+          arguments: >
+            -CodeSigningCertificate $(code-signing-certificate)
+
+      - task: PowerShell@2 # Scans the exe in each repository, and then signs them. Note: Set-AuthenticodeSignature is not supported on non-Windows endpoints.
+        displayName: Scanning and signing executables
+        inputs:
+          targetType: filePath
+          filePath: '$(Build.Repository.LocalPath)\Utilities\code-signing\sign-executables.ps1'
           arguments: >
             -CodeSigningCertificate $(code-signing-certificate)
 
       - task: AzurePowerShell@5
-        displayName: Upload signed files to blob along with SHA256 metadata
-        condition: and(succeeded(), eq(variables['Success'], 'true'))
+        displayName: Upload signed PowerShell scripts to blob storage
+        condition: and(succeeded(), eq(variables['NeedToSignScripts'], 'true'))
         inputs:
           azureSubscription: 'Code-Signing'
           ScriptType: 'FilePath'
@@ -78,9 +87,23 @@ jobs:
           azurePowerShellVersion: 'LatestVersion'
           workingDirectory: '$(Build.StagingDirectory)'
 
+      - task: AzurePowerShell@5
+        displayName: Upload signed executables to blob storage
+        condition: and(succeeded(), eq(variables['NeedToSignExecutables'], 'true'))
+        inputs:
+          azureSubscription: 'Code-Signing'
+          ScriptType: 'FilePath'
+          ScriptPath: '$(Build.Repository.LocalPath)\Utilities\code-signing\upload-executables-to-blob.ps1'
+          ScriptArguments: >
+            -StorageAccountResourceGroupName $(storage-account-resource-group-name)
+            -StorageAccount $(storage-account)
+            -ExecutablesContainer $(executables-container)
+          azurePowerShellVersion: 'LatestVersion'
+          workingDirectory: '$(Build.StagingDirectory)'
+
       - task: DeleteFiles@1 # Cleaning up the stating directory.
         displayName: Deleting files in staging directory
-        condition: and(succeeded(), eq(variables['Success'], 'true'))
+        condition: or(eq(variables['NeedToSignScripts'], 'true'), eq(variables['NeedToSignExecutables'], 'true'))
         inputs:
           SourceFolder: '$(Build.StagingDirectory)'
           Contents: '**'
