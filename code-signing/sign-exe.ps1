@@ -24,6 +24,7 @@ $Results = @()
 
 $Files = $Files | ForEach-Object {
     $SignedStatus = Get-AuthenticodeSignature -FilePath $_
+    Write-Output "---Signed Status: $SignedStatus"
     if ($SignedStatus.Status -ne "Valid") {
         $Hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
         $_ | Add-Member -NotePropertyName "SHA256" -NotePropertyValue $Hash -PassThru | ForEach-Object {
