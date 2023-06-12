@@ -49,7 +49,6 @@ $Files = $Files | ForEach-Object {
         }
     }
 }
-Write-Output "---Check if Files is empty: $Files"
 
 $Results | Format-Table -Property File, Result, SHA256 | Out-String -Width 200
 
