@@ -19,8 +19,6 @@ $Files | Format-Table -Property Name, FullName, RelativePath | Out-String -Width
 
 Write-Output "--- Applying checks to see if the files need to be signed."
 $Results = @()
-
-Write-Output "--- Applying checks to see if the files need to be signed."
 $Files = $Files | ForEach-Object {
     $SignedStatus = Get-AuthenticodeSignature -FilePath $_ -ErrorAction Ignore
     Write-Output "---Signed Status: $SignedStatus"
@@ -52,6 +50,7 @@ $Files = $Files | ForEach-Object {
         }
     }
 }
+Write-Output "---Check if Files is empty: $Files"
 
 $Results | Format-Table -Property File, Result, SHA256 | Out-String -Width 200
 
