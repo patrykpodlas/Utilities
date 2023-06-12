@@ -3,8 +3,8 @@ Param (
 )
 
 $ExistingFiles = $env:ExistingFilesJson | ConvertFrom-Json | Where-Object -Property "Extension" -eq "exe"
-Write-Output "---ExistingFilesDebugEXE"
-$ExistingFiles
+Write-Output "---ExistingFiles"
+$ExistingFiles | Select-Object -Property *
 $Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory | Where-Object { $_.Name -ne "Utilities" } | Select-Object -ExpandProperty Name
 
 $Files = @()
