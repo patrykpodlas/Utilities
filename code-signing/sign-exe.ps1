@@ -3,8 +3,6 @@ Param (
 )
 
 $ExistingFiles = $env:ExistingFilesJson | ConvertFrom-Json
-Write-Output "---ExistingFiles"
-$ExistingFiles | Select-Object -Property *
 $Directories = Get-ChildItem -Path "$env:AGENT_BUILDDIRECTORY/s" -Directory | Where-Object { $_.Name -ne "Utilities" } | Select-Object -ExpandProperty Name
 
 $Files = @()
@@ -22,8 +20,9 @@ $Files | Format-Table -Property Name, FullName, RelativePath | Out-String -Width
 Write-Output "--- Applying checks to see if the files need to be signed."
 $Results = @()
 
+Write-Output "--- Applying checks to see if the files need to be signed."
 $Files = $Files | ForEach-Object {
-    $SignedStatus = Get-AuthenticodeSignature -FilePath $_
+    $SignedStatus = Get-AuthenticodeSignature -FilePath $_ -ErrorAction Ignore
     Write-Output "---Signed Status: $SignedStatus"
     if ($SignedStatus.Status -ne "Valid") {
         $Hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
