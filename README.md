@@ -27,6 +27,7 @@ Scans files in checked out repositories, and applies checks in order:
    1. Role assingment for the service principal:
       * Key Vault Secret User
    2. Secrets
+      * executables-container
       * destination-container
       * storage-account
       * storage-account-resource-group-name
