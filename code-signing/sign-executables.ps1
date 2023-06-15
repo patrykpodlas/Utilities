@@ -28,14 +28,14 @@ $Files = $Files | ForEach-Object {
             $ExistingFile = $ExistingFiles | Where-Object { $_.Name -eq $FileName }
             if ($ExistingFile.SHA256 -ne $_.SHA256) {
                 $Results += New-Object PSObject -Property @{
-                    File   = $FileName
+                    File   = $_.Name
                     Result = "Needs signing"
                     SHA256 = $_.SHA256
                 }
                 $_
             } else {
                 $Results += New-Object PSObject -Property @{
-                    File   = $FileName
+                    File   = $_.Name
                     Result = "Already signed"
                     SHA256 = $_.SHA256
                 }
