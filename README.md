@@ -18,21 +18,29 @@ Scans files in checked out repositories, and applies checks in order:
 ## Requirements
 
 1. Service connection to connect to GitHub.
+   * Service comnection needs access to the checked out repositories.
 2. Service connection to connect to Azure Resource Manager, the service principal generated automatically is sufficient.
 3. Storage Account, Blob Container.
    1. Role assignment for the service principal:
-      * Contributor
-      * Storage Blob Data Contributor
+      * Reader and Data Access - Read the storage account and containers.
+      * Storage Blob Data Contributor - Read/write to the blob storage containers.
+   2. Firewall
+      * Public IP of the agent, unless using private endpoints.
 4. Key Vault
    1. Role assingment for the service principal:
-      * Key Vault Secret User
+      * Key Vault Secret User - Read the secrets and the certificate.
    2. Secrets
-      * executables-container
-      * destination-container
-      * storage-account
+      * executables-container - Stores executables.
+      * destination-container - Stores scripts.
+      * storage-account - Name of the storage account to be used.
       * storage-account-resource-group-name
    3. Certificates
       * code-signing-certificate - Certificate must support code signing, you can generate this certificate in the key vault by adding additional purpose: Code Signing ( 1.3.6.1.5.5.7.3.3 ).
+   4. Firewall
+    The firewall rules must be configured to include DevOps service, which allows linking of the Variable Group with the Key Vault, unless you're using Private Endpoints, in which case you'd have to add DevOps service tag to the vNET.
+      * Public IP of the agent, unless using private endpoints.
+      * 51.104.26.0/24 - UK South - Allows linking Variable Group to the Key Vault.
+      * 40.74.28.0/23 - Western Europe - Allows linking Variable Group to the Key Vault.
 5. Variable Group
     1. Name: Code Signing
     2. Link secrets from an Azure key vault as variables.
