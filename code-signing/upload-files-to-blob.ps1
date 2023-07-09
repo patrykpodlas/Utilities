@@ -7,7 +7,6 @@ Param (
 )
 
 $NewFilesAndTheirHashes = $env:NewFilesAndTheirHashesJson | ConvertFrom-Json
-$NewExecutablesAndTheirHashes = $env:NewExecutablesAndTheirHashesJson | ConvertFrom-Json
 
 $Context = $(Get-AzStorageAccount -ResourceGroupName $StorageAccountResourceGroupName -Name $StorageAccount).Context
 # Upload to blob and set the hashes
